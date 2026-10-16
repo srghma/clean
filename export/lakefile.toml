@@ -24,4 +24,4 @@ name = "Clightdefs"
 [[lean_lib]]
 name = "Examples"
 srcDir = "examples"
-roots = ["Demo", "GenMain", "GenSwap", "GenStruct", "GenStructCopy", "GenLocalVar", "GenFuncPtr", "GenGotoLeave", "GenGotoBack", "GenU16Loop", "GenOOB", "IsSortedReal", "IsSortedSep", "SwapSep", "StructSep", "StructCopySep", "LocalVarSep", "FuncPtrSep", "GotoSep", "GotoBackSep", "U16LoopSep", "OOBSep", "MemCheck", "SepCheck", "DetermCheck", "TempsCheck"]
+roots = ["Demo", "GenMain", "GenSwap", "GenStruct", "GenStructCopy", "GenLocalVar", "GenFuncPtr", "GenGotoLeave", "GenGotoBack", "GenU16Loop", "GenOOB", "IsSortedReal", "IsSortedSep", "SwapSep", "StructSep", "StructCopySep", "LocalVarSep", "FuncPtrSep", "GotoSep", "GotoBackSep", "U16LoopSep", "OOBSep", "MemCheck", "SepCheck", "DetermCheck", "TempsCheck", "FloatConvCheck", "LoadvWrapCheck", "MemInjCheck"]
