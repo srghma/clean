@@ -110,9 +110,9 @@ theorem about a real C function — is documented separately:
 
 **→ [`LEAN.md`](LEAN.md)**
 
-In short: `CCLib/` holds ~6.5k lines of Lean (no `sorry`) mirroring the Rocq
+In short: `CCLib/` holds ~15k lines of Lean (no `sorry`) mirroring the Rocq
 semantic stack, validated by 71,222 operation-level differential observations
-against CompCert's own Rocq code and by 526 whole-program comparisons against
-`ccomp -interp`; `CCLib/Hoare.lean` adds a Hoare logic whose soundness is
+against CompCert's own Rocq code and by 516 whole-program comparisons against
+`ccomp -interp`; `CCLib/logic/Hoare.lean` adds a Hoare logic whose soundness is
 definitional; and `IsSortedReal.lean` uses it to prove that `is_sorted` from
 `main.c` returns `true` on sorted input, under `CC.Step`.

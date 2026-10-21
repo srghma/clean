@@ -1,3 +1,12 @@
+This project was edited by [Aristotle](https://aristotle.harmonic.fun).
+
+To cite Aristotle:
+- Tag @Aristotle-Harmonic on GitHub PRs/issues
+- Add as co-author to commits:
+```
+Co-authored-by: Aristotle (Harmonic) <aristotle-harmonic@harmonic.fun>
+```
+
 > **⚠️ Warning: this is an experimental fork.** It extends CompCert 3.18 with a
 > `-lean` backend for `clightgen` and a Lean 4 formalization of Clight. 
 > This work is under active development and is not part of the official 

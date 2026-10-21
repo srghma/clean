@@ -1,0 +1,61 @@
+name = "RequestProject"
+# The Lean port lives in `export/` and its modules are named `CCLib.*`,
+# `Clightdefs`, and (for the examples) bare names such as `GenSwap`.  The
+# libraries below therefore use `export/` (resp. `export/examples/`) as their
+# source directory, so `import CCLib.X` resolves when building from the
+# repository root.
+# Toolchain: leanprover/lean4:v4.32.1 (same as `export/`).  Mathlib is
+# required (pinned to a revision built for v4.32.1) for the real-number side
+# of the float theory (`flocq/`, `CCLib/lib/FloatsReal*`).  The rest of the
+# port still imports Lean core only.
+defaultTargets = ["CCLib", "Clightdefs", "Examples", "CCTest", "main"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "520045ab14e26149ee970e2e617ca04b09bde5d6"
+
+# `CCLibReal` (the modules that import Mathlib) is a second root, so that
+# `import CCLib` stays Mathlib-free.
+[[lean_lib]]
+name = "CCLib"
+srcDir = "export"
+roots = ["CCLib", "CCLibReal"]
+
+[[lean_lib]]
+name = "Clightdefs"
+srcDir = "export"
+
+[[lean_lib]]
+name = "Examples"
+srcDir = "export/examples"
+roots = ["Demo", "GenMain", "GenSwap", "GenStruct", "GenStructCopy", "GenLocalVar", "GenFuncPtr", "GenGotoLeave", "GenGotoBack", "GenU16Loop", "GenOOB", "IsSortedReal", "IsSortedSep", "SwapSep", "StructSep", "StructCopySep", "LocalVarSep", "FuncPtrSep", "GotoSep", "GotoBackSep", "U16LoopSep", "OOBSep", "MemCheck", "SepCheck", "DetermCheck", "TempsCheck", "FloatConvCheck", "LoadvWrapCheck", "MemInjCheck", "BigstepCheck", "LinkingCheck", "ValuesCheck", "MemdataCheck", "CsemCheck", "InitializersCheck", "CexecCheck", "SimplExprCheck", "SimplLocalsCheck", "CshmgenCheck", "RTLgenCheck", "BackendCheck", "AsmgenCheck", "OptimCheck", "X86Check", "RiscVCheck", "FSetAVLCheck", "ParserCheck", "ZbitsCheck", "ArmPpcCheck", "ArmPpcPtr64Gap", "PowerPCLinkerParams", "FloatsParsedCheck", "ExtractionCheck", "AsmTestPrograms", "X86AsmCheck", "AArch64AsmCheck", "RiscVAsmCheck", "PrintCheck", "RegallocCheck", "CParserCheck", "CPragmasCheck", "CFrontendCheck", "DebugInfoCheck"]
+
+# Generated test programs (`test/lean/*.lean`); they import `Clightdefs`,
+# which the library above provides.  Their module names are `lean.<file>`
+# (source directory `test/`), not `test.lean.<file>`: ProofWidgets, a Mathlib
+# dependency, declares a library `test` owning every `test.*` module, so
+# modules under `test.` would be looked up in ProofWidgets.
+[[lean_lib]]
+name = "CCTest"
+srcDir = "test"
+globs = ["lean.+"]
+
+[[lean_lib]]
+name = "main"
+globs = ["main"]
+
+# Writes the assembly files (x86-64, AArch64 or RISC-V) of the programs of
+# `export/examples/AsmTestPrograms.lean` (used by `test/x86asm/run.sh`).
+[[lean_exe]]
+name = "asmgen"
+srcDir = "export/examples"
+root = "AsmEmit"
+
+# A minimal C compiler driver for x86-64 Linux (C source to assembly) built
+# from the ported front end and the verified compiler (used by
+# `test/csrc/run.sh`).
+[[lean_exe]]
+name = "ccomp"
+srcDir = "export/examples"
+root = "CComp"
