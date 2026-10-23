@@ -28,6 +28,7 @@
 -/
 
 import CCLib.logic.FunspecCall
+import CCLib.logic.Locals
 
 namespace CC
 namespace Sep
@@ -57,8 +58,8 @@ def mallocPayload (b : Block) (sz : Integers.Ptrofs) : HProp :=
 
 /-- `malloc`'s specification: consumes nothing, produces the token and payload. -/
 def mallocSpec (sz : Integers.Ptrofs) : FunSpec where
-  tyargs := [Ty.Tlong .Unsigned noattr]
-  tyres := tvoid
+  tyargs := [tulong]
+  tyres := tptr tvoid
   cc := cc_default
   pre := fun vargs => ⌜vargs = [Val.Vptrofs sz]⌝
   post := fun v => hexists (fun b : Block =>
@@ -233,7 +234,7 @@ theorem malloc_satisfies (ge : CGenv) (fe : EntryRel) (sz : Integers.Ptrofs)
         refine ⟨malloc_access m m' m'' sz b halloc hstore _ _ (pay_lo i) (pay_hi _ i hiS),
                 malloc_access m m' m'' sz b halloc hstore _ _ (pay_lo i) (pay_hi _ i hiS), ?_⟩
         rw [malloc_payload_contents m m' m'' sz b halloc hstore _ (pay_nn i)]
-        simp [List.getElem?_replicate, hi]
+        simp [hi]
       · rw [bytesPtsTo_none b .Freeable _ _ hP hPm b oo
               (by rw [hlenP]; exact Or.inr hout)] at hc
         exact absurd hc (by simp)
@@ -288,7 +289,8 @@ def freeSpec (b : Block) (sz : Integers.Ptrofs) : FunSpec where
   tyres := tvoid
   cc := cc_default
   pre := fun vargs => ⌜vargs = [Val.Vptr b Integers.Ptrofs.zero]⌝
-                      ∗ (mallocToken b sz ∗ mallocPayload b sz)
+                      ∗ (mallocToken b sz
+                         ∗ anyBytes .Freeable b 0 (Integers.Ptrofs.unsigned sz).toNat)
   post := fun v => ⌜v = Val.Vundef⌝
   measure := fun _ => 0
 
@@ -332,14 +334,14 @@ theorem free_satisfies (ge : CGenv) (fe : EntryRel) (b : Block) (sz : Integers.P
     rwa [hs8] at h
   -- rewrite `Ptrofs.unsigned sz` *out* of the payload predicate: carrying the
   -- bridge fact does not help, because that fact is itself `Z`-typed
-  simp only [mallocPayload] at hPm
-  rw [hszN] at hPm
-  simp at hPm
+  obtain ⟨bytes, hPm⟩ := hPm
+  obtain ⟨hlenP, hPm⟩ := pure_sep_elim hPm
+  rw [hszN] at hlenP
+  simp only [Int.toNat_natCast] at hlenP
   have hownP : ∀ i : Nat, i < szN →
-      hP b ((0 : _root_.Int) + (i : _root_.Int)) = some ⟨.Freeable, MemVal.Undef⟩ := by
+      hP b ((0 : _root_.Int) + (i : _root_.Int)) = some ⟨.Freeable, bytes[i]!⟩ := by
     intro i hi
-    have h := bytesPtsTo_ownsRange b .Freeable _ _ hP hPm i (by simp; omega)
-    simpa [hi] using h
+    exact bytesPtsTo_ownsRange b .Freeable _ _ hP hPm i (by omega)
   -- ── the whole block is Freeable: header range ∪ payload range ─────────────
   have hrpH : Mem.rangePerm m b (-8 : _root_.Int) 0 .Cur .Freeable = true := by
     refine Mem.rangePerm_intro _ _ _ _ _ _ (fun ofs g1 g2 => ?_)

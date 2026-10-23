@@ -6,8 +6,8 @@ scans every `import` line of `export/`, `test/` and `main.lean` and classifies e
 repository.  The analysis behind the verdicts, and the same analysis for the modules
 that exist, is in `MODULE_AUDIT.md`.
 
-Missing modules: **351**, of which **93 should be ported** and
-**258 should not exist** in the Lean port.  `export/CCLib.lean` lists the
+Missing modules: **335**, of which **71 should be ported** and
+**264 should not exist** in the Lean port.  `export/CCLib.lean` lists the
 first group as `-- missing (to port): import …`; the second group has been removed
 from it (their remaining importers, if any, are listed below and must be refactored).
 
@@ -19,12 +19,6 @@ that already exist, or a remaining chunk of a ported file; **P3**: the ARM / Pow
 target-specific files (these need the target-generic back end first, see
 `MODULE_AUDIT.md` §4).
 
-### `aarch64`
-
-| module | Rocq/OCaml source | kind | priority | present importers |
-|---|---|---|---|---|
-| `CCLib.aarch64.Builtins1` | `aarch64/Builtins1.v` | whole file | P2 |  |
-
 ### `arm`
 
 | module | Rocq/OCaml source | kind | priority | present importers |
@@ -35,7 +29,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.arm.Asmgenproof1` | `arm/Asmgenproof1.v` | whole file | P3 |  |
 | `CCLib.arm.Asmgenproof1Cond` | `arm/Asmgenproof1.v` | chunk | P3 |  |
 | `CCLib.arm.Asmgenproof1Op` | `arm/Asmgenproof1.v` | chunk | P3 |  |
-| `CCLib.arm.Builtins1` | `arm/Builtins1.v` | whole file | P3 |  |
 | `CCLib.arm.CombineOp` | `arm/CombineOp.v` | whole file | P3 |  |
 | `CCLib.arm.CombineOpproof` | `arm/CombineOpproof.v` | whole file | P3 |  |
 | `CCLib.arm.ConstpropOp` | `arm/ConstpropOp.vp` | whole file | P3 |  |
@@ -45,7 +38,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.arm.NeedOp` | `arm/NeedOp.v` | whole file | P3 |  |
 | `CCLib.arm.OpInject` | `arm/Op.v` | chunk | P3 |  |
 | `CCLib.arm.OpTheory` | `arm/Op.v` | chunk | P3 |  |
-| `CCLib.arm.PrintOp` | `arm/PrintOp.ml` | whole file | P3 |  |
 | `CCLib.arm.SelectLong` | `arm/SelectLong.vp` | whole file | P3 |  |
 | `CCLib.arm.SelectLongproof` | `arm/SelectLongproof.v` | whole file | P3 |  |
 | `CCLib.arm.SelectOp` | `arm/SelectOp.vp` | whole file | P3 |  |
@@ -59,9 +51,6 @@ target-specific files (these need the target-generic back end first, see
 
 | module | Rocq/OCaml source | kind | priority | present importers |
 |---|---|---|---|---|
-| `CCLib.backend.CminorBigstep` | `backend/Cminor.v` | chunk | P2 |  |
-| `CCLib.backend.Fileinfo` | `backend/Fileinfo.ml` | whole file | P2 |  |
-| `CCLib.backend.LocationsMore` | `backend/Locations.v` | chunk | P2 |  |
 | `CCLib.backend.NeedDomainAgree` | `backend/NeedDomain.v` | chunk | P2 |  |
 | `CCLib.backend.RTLMore` | `backend/RTL.v` | chunk | P2 |  |
 | `CCLib.backend.RTLtypingComplete` | `backend/RTLtyping.v` | chunk | P2 |  |
@@ -76,14 +65,10 @@ target-specific files (these need the target-generic back end first, see
 
 | module | Rocq/OCaml source | kind | priority | present importers |
 |---|---|---|---|---|
-| `CCLib.common.BehaviorsInfSeq` | `common/Behaviors.v` | chunk | P2 |  |
 | `CCLib.common.BehaviorsMore` | `common/Behaviors.v` | chunk | P2 |  |
-| `CCLib.common.Builtins0` | `common/Builtins0.v` | whole file | P2 |  |
 | `CCLib.common.Builtins0Num` | `common/Builtins0.v` | chunk | P2 |  |
-| `CCLib.common.DeterminismSem` | `common/Determinism.v` | chunk | P2 |  |
 | `CCLib.common.EventsMore` | `common/Events.v` | chunk | P2 |  |
 | `CCLib.common.EventsSpec` | `common/Events.v` | chunk | P2 |  |
-| `CCLib.common.EventsTraceinf` | `common/Events.v` | chunk | P2 |  |
 | `CCLib.common.EventsVolatile` | `common/Events.v` | chunk | P2 |  |
 | `CCLib.common.GlobalenvsLoadStore` | `common/Globalenvs.v` | chunk | P2 |  |
 | `CCLib.common.GlobalenvsMatch` | `common/Globalenvs.v` | chunk | P2 |  |
@@ -91,22 +76,12 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.common.MemoryAxioms` | `common/Memory.v` | chunk | P2 |  |
 | `CCLib.common.MemoryMemtype` | `common/Memory.v` | chunk | P2 |  |
 | `CCLib.common.MemoryMore` | `common/Memory.v` | chunk | P2 |  |
-| `CCLib.common.SimulationDeterm` | `` | chunk | P2 |  |
-| `CCLib.common.SmallstepForever` | `common/Smallstep.v` | chunk | P2 |  |
-| `CCLib.common.SmallstepMore` | `common/Smallstep.v` | chunk | P2 |  |
-
-### `cparser`
-
-| module | Rocq/OCaml source | kind | priority | present importers |
-|---|---|---|---|---|
-| `CCLib.cparser.deLexer` | `cparser/deLexer.ml` | whole file | P2 |  |
 
 ### `driver`
 
 | module | Rocq/OCaml source | kind | priority | present importers |
 |---|---|---|---|---|
 | `CCLib.driver.ComplementsSeparate` | `driver/Complements.v` | chunk | P2 |  |
-| `CCLib.driver.Compopts` | `driver/Compopts.v` | whole file | P2 |  |
 | `CCLib.driver.InterpPrintf` | `driver/Interp.ml` | chunk | P2 |  |
 
 ### `lib`
@@ -119,9 +94,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.lib.IntegersWords` | `lib/Integers.v` | chunk | P2 |  |
 | `CCLib.lib.LatticeMore` | `lib/Lattice.v` | chunk | P2 |  |
 | `CCLib.lib.MapsMore` | `lib/Maps.v` | chunk | P2 |  |
-| `CCLib.lib.MapsProperties` | `lib/Maps.v` | chunk | P2 |  |
-| `CCLib.lib.MapsRemove` | `lib/Maps.v` | chunk | P2 |  |
-| `CCLib.lib.Printlines` | `lib/Printlines.ml` | whole file | P2 |  |
 | `CCLib.lib.UnionFindMore` | `lib/UnionFind.v` | chunk | P2 |  |
 
 ### `powerpc`
@@ -134,7 +106,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.powerpc.Asmgenproof1` | `powerpc/Asmgenproof1.v` | whole file | P3 |  |
 | `CCLib.powerpc.Asmgenproof1Cond` | `powerpc/Asmgenproof1.v` | chunk | P3 |  |
 | `CCLib.powerpc.Asmgenproof1Op` | `powerpc/Asmgenproof1.v` | chunk | P3 |  |
-| `CCLib.powerpc.Builtins1` | `powerpc/Builtins1.v` | whole file | P3 |  |
 | `CCLib.powerpc.CombineOp` | `powerpc/CombineOp.v` | whole file | P3 |  |
 | `CCLib.powerpc.CombineOpproof` | `powerpc/CombineOpproof.v` | whole file | P3 |  |
 | `CCLib.powerpc.ConstpropOp` | `powerpc/ConstpropOp.vp` | whole file | P3 |  |
@@ -144,7 +115,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.powerpc.NeedOp` | `powerpc/NeedOp.v` | whole file | P3 |  |
 | `CCLib.powerpc.OpInject` | `powerpc/Op.v` | chunk | P3 |  |
 | `CCLib.powerpc.OpTheory` | `powerpc/Op.v` | chunk | P3 |  |
-| `CCLib.powerpc.PrintOp` | `powerpc/PrintOp.ml` | whole file | P3 |  |
 | `CCLib.powerpc.SelectLong` | `powerpc/SelectLong.vp` | whole file | P3 |  |
 | `CCLib.powerpc.SelectLongproof` | `powerpc/SelectLongproof.v` | whole file | P3 |  |
 | `CCLib.powerpc.SelectLongproof2` | `powerpc/SelectLongproof.v` | chunk | P3 |  |
@@ -154,18 +124,6 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.powerpc.SelectOpproof3` | `powerpc/SelectOpproof.v` | chunk | P3 |  |
 | `CCLib.powerpc.Stacklayout` | `powerpc/Stacklayout.v` | whole file | P3 |  |
 | `CCLib.powerpc.ValueAOp` | `powerpc/ValueAOp.v` | whole file | P3 |  |
-
-### `riscV`
-
-| module | Rocq/OCaml source | kind | priority | present importers |
-|---|---|---|---|---|
-| `CCLib.riscV.Builtins1` | `riscV/Builtins1.v` | whole file | P2 |  |
-
-### `x86`
-
-| module | Rocq/OCaml source | kind | priority | present importers |
-|---|---|---|---|---|
-| `CCLib.x86.Builtins1` | `x86/Builtins1.v` | whole file | P2 |  |
 
 ## 2. Modules that should not exist
 
@@ -235,18 +193,24 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.lib.Intv` | `Intv.In` is `Set.Ico` (Mathlib) / `List.range'` (core) |  |
 | `CCLib.lib.Zbits` | `CCLib.lib.Integers*` is built on core `BitVec`/`Int` bit operations (`Int.testBit`, `<<<`, `Int.land` ...); see MATHLIB_DUPLICATION.md |  |
 
-### Already merged into another module of the port — 11 modules
+### Already merged into another module of the port — 17 modules
 
 | module | reason | present importers (to refactor) |
 |---|---|---|
+| `CCLib.aarch64.Builtins1` | merged into `CCLib.common.Builtins` (`PlatformBuiltin`: aarch64 has no platform built-ins) |  |
 | `CCLib.arm.Archi` | merged into `CCLib.targets.Archi` (`ArchiConfig` of every target) |  |
+| `CCLib.arm.Builtins1` | identical to `aarch64/Builtins1.v` (no platform built-ins): `PlatformBuiltin` of `CCLib.common.Builtins` |  |
 | `CCLib.backend.Registers` | `backend/Registers` is merged into `backend/RTL.lean` (`Reg`, `Regmap`) |  |
+| `CCLib.common.BehaviorsInfSeq` | merged into `CCLib.common.Bigstep` (`foreverReactive_coind`, `forever_silent_or_reactive`, proved directly without the `tstate` device of section `INF_SEQ_DECOMP`) |  |
+| `CCLib.common.Builtins0` | merged into `CCLib.common.Builtins` (port of `common/Builtins0.v` and the target `Builtins1.v`) |  |
 | `CCLib.cparser.ErrorReports` | merged into `CCLib.cparser.PreParser` (`syntaxError`, without the message database) |  |
 | `CCLib.cparser.pre_parser` | merged into `CCLib.cparser.PreParser` (recursive-descent port of `cparser/pre_parser.mly`) |  |
 | `CCLib.cparser.pre_parser_aux` | merged into `CCLib.cparser.PreParser` (`identifier_type`, typedef context) |  |
 | `CCLib.powerpc.Archi` | merged into `CCLib.targets.Archi` |  |
 | `CCLib.riscV.Archi` | merged into `CCLib.targets.Archi` |  |
+| `CCLib.riscV.Builtins1` | identical to `aarch64/Builtins1.v` (no platform built-ins): `PlatformBuiltin` of `CCLib.common.Builtins` |  |
 | `CCLib.riscV.Conventions1` | merged into `CCLib.riscV.Conventions` (port of `riscV/Conventions1.v`) |  |
+| `CCLib.x86.Builtins1` | merged into `CCLib.x86.SelectOp` (`__builtin_fmax`/`__builtin_fmin`) |  |
 | `CCLib.x86.Conventions1` | merged into `CCLib.x86.Conventions` (port of `x86/Conventions1.v`) |  |
 | `CCLib.x86_32.Archi` | merged into `CCLib.targets.Archi` |  |
 | `CCLib.x86_64.Archi` | merged into `CCLib.targets.Archi` |  |

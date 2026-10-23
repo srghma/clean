@@ -50,6 +50,50 @@ Derived from the same frame discipline as everything else: the callee's
 pass through untouched.  That is the whole reason a call rule is worth having in a
 separation logic and not in a plain Hoare logic. -/
 
+/-- The call rule at the actual arguments: the callee need only meet `S` at the
+    arguments it is called with (`SatisfiesAt`), which is what a recursive call
+    can supply (see `satisfies_rec`). -/
+theorem triple_call_at (ge fe f) (S : FunSpec) (optid : Option Ident)
+    (a : Expr) (al : List Expr) (P Q : Assn) (b : Block) (fd : FunDef)
+    (hfind : Genv.findFunct ge.genv_genv (.Vptr b Integers.Ptrofs.zero) = some fd)
+    (hty : typeOfFundef fd = .Tfunction S.tyargs S.tyres S.cc)
+    (hclass : Cop.classifyFun (typeof a) = .f S.tyargs S.tyres S.cc)
+    (hsplit : ∀ e le hp m, P e le hp → Heap.Agrees hp m →
+        ∃ vargs h1 h2,
+          Heap.disjoint h1 h2 ∧ hp = Heap.union h1 h2
+          ∧ EvalExpr ge e le m a (.Vptr b Integers.Ptrofs.zero)
+          ∧ EvalExprlist ge e le m al S.tyargs vargs
+          ∧ S.pre vargs h1
+          ∧ SatisfiesAt ge fe fd S vargs
+          ∧ (∀ v h1', S.post v h1' → Heap.disjoint h1' h2 →
+                Q e (setOpttemp optid v le) (Heap.union h1' h2))) :
+    Triple ge fe f P (.Scall optid a al) (.only Q) := by
+  intro k e le hp hf m hd hag hP
+  obtain ⟨vargs, h1, h2, hd12, heq, hevf, hevl, hpre, hspec, hQ⟩ :=
+    hsplit e le hp m hP (Heap.Agrees_union_left hag)
+  subst heq
+  rw [Heap.disjoint_union_left] at hd
+  -- the caller's other resources join the frame for the duration of the call
+  have hd1 : Heap.disjoint h1 (Heap.union h2 hf) := by
+    rw [Heap.disjoint_union_right]; exact ⟨hd12, hd.1⟩
+  have hag1 : Heap.Agrees (Heap.union h1 (Heap.union h2 hf)) m := by
+    rw [← Heap.union_assoc]; exact hag
+  obtain ⟨v, m', h1', hcall, hpost, hd1', hag1'⟩ :=
+    hspec (.Kcall optid f e le k) m h1 (Heap.union h2 hf) rfl hpre hd1 hag1
+  rw [Heap.disjoint_union_right] at hd1'
+  refine ⟨.Normal e (setOpttemp optid v le) m', Heap.union h1' h2, ?_, ?_, ?_, ?_⟩
+  · -- enter the call, run it, then pop the `Kcall` frame
+    refine Steps.step _ _ _
+      (Step.call f optid a al k e le m S.tyargs S.tyres S.cc _ vargs fd
+        hclass hevf hevl hfind hty) ?_
+    -- the callee lands exactly where `step_returnstate` expects it
+    exact Steps.trans hcall
+      (Steps.one (Step.returnstate v optid f e le k m'))
+  · rw [Heap.disjoint_union_left]; exact ⟨hd1'.2, hd.2⟩
+  · show Heap.Agrees (Heap.union (Heap.union h1' h2) hf) m'
+    rw [Heap.union_assoc]; exact hag1'
+  · exact hQ v h1' hpost hd1'.1
+
 theorem triple_call (ge fe f) (S : FunSpec) (optid : Option Ident)
     (a : Expr) (al : List Expr) (P Q : Assn) (b : Block) (fd : FunDef)
     (hspec : ∀ vargs, SatisfiesAt ge fe fd S vargs)
@@ -64,32 +108,29 @@ theorem triple_call (ge fe f) (S : FunSpec) (optid : Option Ident)
           ∧ S.pre vargs h1
           ∧ (∀ v h1', S.post v h1' → Heap.disjoint h1' h2 →
                 Q e (setOpttemp optid v le) (Heap.union h1' h2))) :
-    Triple ge fe f P (.Scall optid a al) (.only Q) := by
-  intro k e le hp hf m hd hag hP
-  obtain ⟨vargs, h1, h2, hd12, heq, hevf, hevl, hpre, hQ⟩ :=
-    hsplit e le hp m hP (Heap.Agrees_union_left hag)
-  subst heq
-  rw [Heap.disjoint_union_left] at hd
-  -- the caller's other resources join the frame for the duration of the call
-  have hd1 : Heap.disjoint h1 (Heap.union h2 hf) := by
-    rw [Heap.disjoint_union_right]; exact ⟨hd12, hd.1⟩
-  have hag1 : Heap.Agrees (Heap.union h1 (Heap.union h2 hf)) m := by
-    rw [← Heap.union_assoc]; exact hag
-  obtain ⟨v, m', h1', hcall, hpost, hd1', hag1'⟩ :=
-    hspec vargs (.Kcall optid f e le k) m h1 (Heap.union h2 hf) rfl hpre hd1 hag1
-  rw [Heap.disjoint_union_right] at hd1'
-  refine ⟨.Normal e (setOpttemp optid v le) m', Heap.union h1' h2, ?_, ?_, ?_, ?_⟩
-  · -- enter the call, run it, then pop the `Kcall` frame
-    refine Steps.step _ _ _
-      (Step.call f optid a al k e le m S.tyargs S.tyres S.cc _ vargs fd
-        hclass hevf hevl hfind hty) ?_
-    -- the callee lands exactly where `step_returnstate` expects it
-    exact Steps.trans hcall
-      (Steps.one (Step.returnstate v optid f e le k m'))
-  · rw [Heap.disjoint_union_left]; exact ⟨hd1'.2, hd.2⟩
-  · show Heap.Agrees (Heap.union (Heap.union h1' h2) hf) m'
-    rw [Heap.union_assoc]; exact hag1'
-  · exact hQ v h1' hpost hd1'.1
+    Triple ge fe f P (.Scall optid a al) (.only Q) :=
+  triple_call_at ge fe f S optid a al P Q b fd hfind hty hclass (fun e le hp m hP hag => by
+    obtain ⟨vargs, h1, h2, hd, heq, hevf, hevl, hpre, hQ⟩ := hsplit e le hp m hP hag
+    exact ⟨vargs, h1, h2, hd, heq, hevf, hevl, hpre, hspec vargs, hQ⟩)
+
+/-- **Recursive functions with a `WITH` clause.**  VST's specifications are
+    families `S w` indexed by the `WITH` variables.  The functions `fd w` meet
+    their specifications `S w` if each body meets `S w` assuming the calls at
+    smaller `w'` (for a measure `μ`) meet theirs.  For a single recursive
+    function `fd` is constant; mutual recursion takes `W` to range over the
+    functions as well (e.g. `Bool × Nat` for `even`/`odd`). -/
+theorem satisfies_rec {W : Type} (ge : CGenv) (fe : EntryRel) (fd : W → FunDef)
+    (S : W → FunSpec) (μ : W → Nat)
+    (h : ∀ w, (∀ w', μ w' < μ w → ∀ vargs, SatisfiesAt ge fe (fd w') (S w') vargs) →
+      ∀ vargs, SatisfiesAt ge fe (fd w) (S w) vargs) :
+    ∀ w vargs, SatisfiesAt ge fe (fd w) (S w) vargs := by
+  suffices H : ∀ n w, μ w = n → ∀ vargs, SatisfiesAt ge fe (fd w) (S w) vargs from
+    fun w => H _ w rfl
+  intro n
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+    intro w hw
+    exact h w (fun w' hlt => ih (μ w') (hw ▸ hlt) w' rfl)
 
 /-! ## From a body triple to a specification -/
 

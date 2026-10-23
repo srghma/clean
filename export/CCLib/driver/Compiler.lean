@@ -44,6 +44,7 @@ import CCLib.backend.CleanupLabels
 import CCLib.backend.Debugvar
 import CCLib.backend.Stacking
 import CCLib.aarch64.Asmgen
+import CCLib.driver.Compopts
 
 namespace CC
 namespace Compiler
@@ -77,29 +78,11 @@ def totalIf {A : Type} (flag : Unit → Bool) (f : A → A) (prog : A) : A :=
 def partialIf {A : Type} (flag : Unit → Bool) (f : A → Res A) (prog : A) : Res A :=
   if flag () then f prog else .OK prog
 
-/-- Compiler options (`Compopts.v`), target parameters, and the untrusted
+/-- Compiler options (`Compopts.v`, inherited from `CC.Compopts`), target parameters, and the untrusted
     components that CompCert implements outside Rocq. -/
-structure Config where
+structure Config extends CC.Compopts where
   /-- `Archi.abi` -/
   abi : Conventions1.AbiKind := .AAPCS64
-  /-- `Compopts.optim_tailcalls` -/
-  optimTailcalls : Bool := true
-  /-- `Compopts.optim_constprop` -/
-  optimConstprop : Bool := true
-  /-- `Compopts.optim_CSE` -/
-  optimCSE : Bool := true
-  /-- `Compopts.optim_redundancy` -/
-  optimRedundancy : Bool := true
-  /-- `Compopts.debug` -/
-  debug : Bool := false
-  /-- `Compopts.optim_for_size` -/
-  optimForSize : Bool := false
-  /-- `Compopts.va_strict` -/
-  vaStrict : Bool := false
-  /-- `Compopts.propagate_float_constants` -/
-  propagateFloatConstants : Bool := true
-  /-- `Compopts.generate_float_constants` -/
-  generateFloatConstants : Bool := true
   /-- `SelectOp.symbol_is_relocatable` -/
   symbolIsRelocatable : Ident → Bool := fun _ => false
   /-- `Asmgen.symbol_is_aligned` -/

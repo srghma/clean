@@ -12,6 +12,16 @@ namespace PrintAST
 
 open Camlcoq
 
+/-- `comparison_name`, which `backend/PrintCminor.ml` and every target's
+    `PrintOp.ml` define identically. -/
+def comparisonName : Comparison → String
+  | .Ceq => "=="
+  | .Cne => "!="
+  | .Clt => "<"
+  | .Cle => "<="
+  | .Cgt => ">"
+  | .Cge => ">="
+
 /-- `PrintAST.name_of_type` -/
 def nameOfType : ATyp → String
   | .Tint => "int"

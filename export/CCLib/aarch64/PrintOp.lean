@@ -19,13 +19,7 @@ instance : CamlNum Amount32 := ⟨fun a => Integers.Int.unsigned a.a32_amount⟩
 instance : CamlNum Amount64 := ⟨fun a => Integers.Int.unsigned a.a64_amount⟩
 
 /-- `PrintOp.comparison_name` -/
-def comparisonName : Comparison → String
-  | .Ceq => "=="
-  | .Cne => "!="
-  | .Clt => "<"
-  | .Cle => "<="
-  | .Cgt => ">"
-  | .Cge => ">="
+abbrev comparisonName : Comparison → String := PrintAST.comparisonName
 
 /-- `PrintOp.shift` -/
 def shift {α : Type} [CamlNum α] (s : Shift) (a : α) : String :=

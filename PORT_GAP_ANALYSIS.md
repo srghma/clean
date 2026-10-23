@@ -4,6 +4,229 @@ Scope: the Lean 4 port in `export/` (`CCLib/`, `Clightdefs.lean`, `examples/`)
 compared with the Rocq sources in this tree (`lib/`, `common/`, `cfrontend/`,
 `aarch64/`). Measured against CompCert 3.17 (`VERSION`).
 
+## Status update 84 (VST `queue2`; queue proofs shared between programs)
+
+- The queue proofs of update 83 are now stated for any composite
+  environment with the queue's layout (`QueueCenv`: `struct fifo` with
+  `head`/`tail` at 0/8, `struct elem` with an `int` field at 0 and `next`
+  at 8), and the second word of an element (`QElem.b`) is any value.
+  `QueueFuns` is parametrized by the body of `make_elem`, and `call_put`
+  by the calling function.
+- VST test port of `progs/queue2.c` (VST's `verif_queue2.v`), without
+  `sorry`, on the generated `export/VST/progs/queue2.lean`:
+  `verif_queue2` (`surely_malloc`, `fifo_new`, `fifo_put`, `fifo_empty`,
+  `fifo_get` are `rfl`-equal to `queue.c`'s and their proofs are reused
+  through `queue2Cenv`; `make_elem(data)` returns an element with
+  undefined padding) and `verif_queue2_main` (`main` returns `1`).
+
+## Status update 83 (struct fields; VST `queue`)
+
+- `logic/StructField.lean` (new): reading and writing any field
+  `x->fld` of a struct through a pointer temporary, given the field's
+  offset (`Sep.eval_field_mapsto`, `Sep.triple_store_field`, and
+  `Sep.triple_store_field_any` for the raw bytes of a fresh `malloc`);
+  `Sep.mallocToken_weakValidPointer` (a `malloc`ed pointer is weakly valid
+  even for a zero-sized block, so `if (!p)` is decided),
+  `Sep.eval_notbool_validptr`, `Sep.anyBytes_of_mapsto`,
+  `Sep.mallocPayload_undefBytes`.
+- VST test port of `progs/queue.c` (VST's `verif_queue.v`), without
+  `sorry`, in five files on the generated `export/VST/progs/queue.lean`:
+  `verif_queue_rep` (the representation `fifo`/`fifo_body` as list
+  segments of nodes, and `surely_malloc`, which meets `malloc`'s own
+  specification), `verif_queue` (`fifo_empty`, `fifo_get`),
+  `verif_queue_put` (`fifo_put`), `verif_queue_new` (`fifo_new`,
+  `make_elem`) and `verif_queue_main` (`main` returns `1 + 10`, calling
+  all of the above through their specifications).  Without fractional
+  shares in the heap model, the queue owns its elements entirely while
+  they are queued (VST splits them with `Qsh`/`Qsh'`), so an element of
+  `contents` records its pointer and the values of `a` and `b`.
+
+## Status update 82 (malloc/free specifications; generic `for` loops; filling arrays; VST `rotate`)
+
+- `logic/Funspec.lean`: the `malloc` specification now returns `void *`
+  (`tptr tvoid`, as CompCert's `EF_malloc` signature does) and takes
+  `unsigned long`; `free` accepts a block with any contents
+  (`anyBytes .Freeable`), which is what VST's `free_spec` asks for.
+- `logic/ForLoop.lean`: `triple_for_guard` (any `int`-typed guard
+  expression), `triple_for_guard_from` (loops starting at any `j0`),
+  `triple_pure_pre`; `triple_for_lt` is now a corollary.
+- `logic/ArrayInit.lean` (new): filling a freshly `malloc`'d block as an
+  `int` array (`arrayU32_snoc`, `arrayU32_anyBytes`,
+  `mallocPayload_anyBytes`, `Sep.triple_store_index_init`,
+  `Sep.triple_store_index_int_frame`).
+- VST test ports, without `sorry`: `verif_rotate` (`rotate` of `rotate.c`
+  against `rotate_spec`: `malloc` a buffer, three loops, `free`) and
+  `verif_rotate_sorted` (`sorted_rotate` calls `rotate` and adds `N` to
+  the wrapped elements; it meets `sorted_rotate_spec`, and VST's
+  `sorted_rotate` of a sorted list with elements in `[0, N]` is sorted).
+- The duplicate `readable_of_writable` in `verif_revarray` was removed in
+  favour of the one in `logic/ExactTempsHeap.lean`.
+
+## Status update 81 (printers of `Op`; PowerPC builtins; sorting and merging lists in VST)
+
+- `arm/PrintOp.lean` and `powerpc/PrintOp.lean` (new, from the targets'
+  `PrintOp.ml`): conditions, addressing modes and operators as text;
+  the comparison names are shared through `PrintAST.comparisonName`
+  instead of being repeated per target. `examples/PrintOpCheck.lean`
+  checks sample outputs.
+- `powerpc/Builtins1.lean` (new, from `powerpc/Builtins1.v`): the
+  platform builtins with their semantics and the `BuiltinSem` proofs.
+- Program logic: `ListNode.listrep_cons_front` (a non-empty list next to
+  a frame), `ListNode.eval_null_cast` (`(void *) 0`),
+  `ListRep.semCast_ofBool_bool`, `ListNode.triple_store_tail_expr` (store
+  of any link expression into `x->tail`), `Tactics.triple_or`.
+- VST test ports, all without `sorry`: `verif_insertionsort` (`insert`
+  against `insert_spec`; `insertionsort` builds the left fold of
+  `insert`), `verif_insertionsort_sorted` (that fold is VST's
+  `insertion_sort`, via Mathlib's `List.insertionSort`, so
+  `insertionsort` meets `insertionsort_spec`), and `verif_merge` (`merge`
+  of `merge.c` against `merge_spec`: two lists merged in place through a
+  pointer `x` to the cell to write next, which is the addressable local
+  `ret` at first and then the `tail` field of the last merged node).
+- `MISSING_MODULES.md` regenerated (335 missing, 71 to port).
+
+## Status update 80 (de-lexer; C strings in the program logic; VST progs)
+
+- `cparser/deLexer.lean` (new, from `cparser/deLexer.ml`): `delex` on the
+  terminals of the verified parser (total, including the three terminals
+  `deLexer.ml` does not list), `delexSymbol`, `delexSentence`.
+  `examples/ParseCheck.lean` checks that the lexer reads every `delex t`
+  back as `t`.
+- Program logic: `logic/CString.lean` (new): VST's `cstring` (`CC.cstring`
+  over `arrayU8`), `str[i]` with a `size_t` index
+  (`eval_index_bytes_ulong`, `byteOfsL_unsigned`), character comparisons
+  (`eval_eq_uchar`, `eval_lt_uchar`, `eval_gt_uchar`), `cstring_zero_iff`.
+- VST test ports, all without `sorry`: `verif_floyd_tests`
+  (`test_sizeof`), `verif_reverse_client` (`last_foo`, assuming
+  `reverse_spec` as VST's `Gprog` does, and also linked with `f_reverse`
+  of `reverse.c`, which discharges the assumption), `verif_message`
+  (`intpair_serialize`, `intpair_deserialize`), `verif_strlib` (`strlen`,
+  `strchr`), `verif_strlib_strcmp` (`strcmp`) and `verif_object`
+  (the methods `foo_reset`, `foo_twiddle` against `foo_invariant`).
+- `MISSING_MODULES.md` regenerated (338 missing, 75 to port).
+
+## Status update 79 (driver options; lists, 8-byte arrays and globals in the program logic; VST progs)
+
+- `driver/Compopts.lean` (new, from `driver/Compopts.v`): the structure
+  `CC.Compopts` of compiler flags; the `Config` structures of
+  `driver/`, `x86/` and `riscV/Compiler.lean` now extend it instead of
+  repeating the fields.
+- `lib/Printlines.lean` (from `lib/Printlines.ml`) and
+  `backend/Fileinfo.lean` (from `backend/Fileinfo.ml`).
+- Program logic: `logic/HoareArray8.lean` (new): arrays of any 8-byte
+  scalar (`array8`, `eval_index8`, `triple_store_index8`);
+  `HoareArrayDouble` is now an instance of it, and
+  `logic/HoareArrayL64.lean` (new) adds `long` arrays.
+  `logic/ListRep.lean` (new): list segments `lseg`/`listrep` over any node
+  predicate (`lseg_append`, `lseg_snoc`, NULL tests);
+  `logic/ListNode.lean` (new): the node layout `struct { int head;
+  struct list *tail; }` with field reads and `x->tail = y`.
+  `logic/Globals.lean`: global variables and fields of global structs as
+  l-values (`lvalue_global`, `lvalue_global_field`);
+  `ExactTempsHeap.triple_assign_atE_front`: a store into the first cell of
+  a fragment next to a frame.
+- VST test ports, all without `sorry`: `verif_prod` (`product`, plus a
+  proof that VST's `2^27` bound does not rule out overflow),
+  `verif_reverse` (`sumlist`, `reverse`), `verif_append` (`append`),
+  `verif_union` (`g`), `verif_libglob` (`LG_init`, `LG_bump`, `LG_get`,
+  `client`, `main` and `LG.initial`).
+- `MISSING_MODULES.md` regenerated (339 missing).
+
+## Status update 78 (addressable locals; `double` arrays; location order; VST progs)
+
+- Program logic: `logic/OneLocal.lean` (new): function entry and
+  `return` for a function with one addressable local
+  (`Sep.satisfies_oneLocal`, `Sep.triple_return_oneLocal`, address and
+  lvalue evaluation of the local); `ExactTemps.AtE` generalizes `AtH` to
+  any local environment.
+- `logic/HoareArrayDouble.lean` (new): `double` arrays (`arrayV64`,
+  `arrayF64`), indexed read (`eval_index_f64`), indexed store next to a
+  frame (`triple_store_index_f64`), IEEE-754 `+`/`*` on `double`.
+- `backend/LocationsMore.lean` (new, from `backend/Locations.v`): the
+  total order `OrderedLoc` and `outside_interval_diff`/
+  `diff_outside_interval`; `backend/Allocation.lean` now uses it instead
+  of its own copy.  `common/SmallstepMore.lean` (new): `star_three`…,
+  `plus_two`…, `plus_ind2`, `plus_E0_ind`.
+- VST test ports, all without `sorry`: `verif_stackframe_demo` (`iden`),
+  `verif_structcopy` (`f`), `verif_funcptr` (`myfunc`, `main`),
+  `verif_float` (`main`), `verif_dotprod` (`dotprod`) and
+  `verif_dotprod_add` (`add`).
+- `MISSING_MODULES.md` regenerated (342 missing, 79 to port).
+
+## Status update 77 (PTree removal/cardinal; exact temps with heap; VST progs)
+
+- `lib/MapsRemove.lean` (new): `elements_extensional`, `elements_remove`,
+  `cardinal_set_none`, `cardinal_set` (remaining `PTree_Properties`
+  lemmas about `remove`/`cardinal` from `lib/Maps.v`).
+- Program logic: `logic/ExactTempsHeap.lean` (new) with `Sep.AtH`
+  (exact temporaries plus heap), set/assign/return rules for it,
+  unsigned pointer-offset arithmetic, `eval_lvalue_mapsto`;
+  `HoareArray.semBinop_mul_int`.
+- VST test ports, all without `sorry`: `verif_peel` (disjunctive loop
+  invariant instead of loop peeling), `verif_field_loadstore` (`sub1`,
+  `sub2`, `sub3`), `verif_store_demo` (`set22`, `fiddle`),
+  `verif_load_demo` (`get22`, `get_little_endian`) and
+  `verif_load_demo_fiddle` (the loop of `fiddle`).
+- `MISSING_MODULES.md` regenerated.
+- Next: `verif_structcopy` needs a generic function-entry rule for
+  functions with addressable locals (allocation of the local frame and
+  its release on return).
+
+## Status update 76 (determinism; traceinf; PTree properties; VST progs)
+
+- `common/DeterminismSem.lean` (new): the rest of `common/Determinism.v`
+  (`match_possible_traces`, possible behaviors, deterministic semantics,
+  `program_behaves_deterministic`, world-restricted semantics and
+  `world_sem_deterministic`).
+- `common/EventsTraceinf.lean` (new): infinite-trace part of
+  `common/Events.v` (`Econsinf`, trace prefixes, `traceinfOfSeq`);
+  `Behaviors.lean` reuses it and `List.getD`.
+- `lib/MapsProperties.lean` (new): `PTree_Properties` gathered in one place
+  (previously scattered duplicates of `cardinal`, `of_list`, `for_all`,
+  element ordering removed); `option_rel` replaced by core `Option.Rel`;
+  `exists_`, `beq`, `for_all_false`, `exists_false` ported.
+- Program logic: `logic/HoareArrayLong.lean` (arrays indexed by `long`),
+  generic indexed load/store lemmas in `HoareArrayInt`/`ArrayStore`.
+- VST test ports, all without `sorry`: `verif_nest3`, `verif_min64`,
+  `verif_bin_search`.
+- `MISSING_MODULES.md` regenerated.
+
+## Status update 75 (determinacy simulations; Cminor big-step; VST progs)
+
+- `common/SimulationDeterm.lean` (new): forward simulations with an
+  "eventually" index (`forward_simulation_eventually{,_plus}`), the
+  determinacy lemmas `sd_determ_1/2/3`, `star_determinacy`, and
+  `forward_simulation_determ{,_star,_plus,_one}` (remaining part of
+  `common/Smallstep.v`).
+- `BehaviorsInfSeq` confirmed as already covered by `common/Bigstep.lean`
+  (recorded as merged).
+- `backend/CminorBigstep.lean` (new): Cminor big-step semantics
+  (terminating and diverging), and its soundness with respect to the
+  small-step semantics (`bigstep_semantics_sound`).
+- Program logic: `logic/PtrCompare.lean` (pointer equality between owned
+  cells), `logic/Globals.lean` (reading global variables).
+- VST test ports, all without `sorry`: `verif_ptr_compare`, `verif_even`,
+  `verif_odd`, `verif_cast_test`, `verif_global`, `verif_nest2`.
+- `MISSING_MODULES.md` regenerated.
+
+## Status update 74 (forever lemmas; exact-temps logic; recursion; VST progs)
+
+- `common/SmallstepForever.lean` (restored module): the `Forever` coinductive
+  (moved out of `Bigstep.lean`), `ForeverN`, `ForeverPlus`, `ForeverSilentN`
+  and their equivalences with `Forever`/`ForeverSilent`.
+- Program logic: `logic/Diverge.lean` (non-termination from repeated steps),
+  `logic/ExactTemps.lean` (exact local states `Sep.At`; `set`/`if`/`return`
+  rules; `satisfies_at`), `logic/ForLoop.lean` (`for (i = a; i < b; i++)`
+  loops); `FunspecCall.triple_call_at` and `satisfies_rec` (recursive and
+  mutually recursive functions with `WITH`-parameterised specs, by a measure);
+  unsigned operand lemmas in `HoareArray`.
+- VST test ports, all without `sorry`: `VST/progs/verif_dead_if.lean`,
+  `verif_sumarray2.lean`, `verif_logical_compare.lean`, `verif_fib.lean`
+  (loop, loop with saved variable, recursive), `verif_evenodd.lean` (mutual
+  recursion) and `verif_switch.lean` (`twice`, `f`).
+- `Builtins0`/`Builtins1` recorded as merged modules; `MISSING_MODULES.md`
+  regenerated.
+
 ## Status update 73 (Mach syntax; `arm`/`powerpc` `Asmgen`; VST progs)
 
 - `backend/MachSyntax.lean`: target-generic Mach syntax (instructions,

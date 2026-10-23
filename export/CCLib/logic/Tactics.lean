@@ -69,6 +69,15 @@ theorem triple_pre (ge fe f) {P P' : Assn} {s : Stmt} {R : ExitConds}
   triple_conseq ge fe f h hP (fun _ _ _ x => x) (fun _ _ _ x => x)
     (fun _ _ _ x => x) (fun _ _ x => x)
 
+/-- Case split on a disjunctive precondition. -/
+theorem triple_or (ge fe f) {P1 P2 : Assn} {s : Stmt} {R : ExitConds}
+    (h1 : Triple ge fe f P1 s R) (h2 : Triple ge fe f P2 s R) :
+    Triple ge fe f (fun e le hp => P1 e le hp ∨ P2 e le hp) s R := by
+  intro k e le hp hf m hd hag hP
+  rcases hP with h | h
+  · exact h1 k e le hp hf m hd hag h
+  · exact h2 k e le hp hf m hd hag h
+
 end Sep
 
 /-! ## Tactics -/

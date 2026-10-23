@@ -17,13 +17,7 @@ namespace PrintOp
 open Camlcoq Op
 
 /-- `PrintOp.comparison_name` -/
-def comparisonName : Comparison → String
-  | .Ceq => "=="
-  | .Cne => "!="
-  | .Clt => "<"
-  | .Cle => "<="
-  | .Cgt => ">"
-  | .Cge => ">="
+abbrev comparisonName : Comparison → String := PrintAST.comparisonName
 
 /-- `PrintOp.print_condition` -/
 def printCondition {R : Type} (reg : R → String) : Condition → List R → String

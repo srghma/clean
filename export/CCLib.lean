@@ -225,8 +225,6 @@
   * `CCLib.common.SmallstepForever` — `common/Smallstep.v`: `forever_N`,
                        `forever_plus`, `forever_silent_N` and their equivalence
                        with `forever`/`forever_silent`.
-  * `CCLib.common.BehaviorsInfSeq` — `common/Behaviors.v`, section
-                       `INF_SEQ_DECOMP` (`tstate`, `tstep`, `tsteps`, …).
   * `CCLib.common.EventsTraceinf` — the `traceinf` part of `common/Events.v`:
                        `traceinf_sim`, `traceinf_sim'`, `traceinf'`, prefixes.
   * `CCLib.driver.ComplementsSeparate` — `driver/Complements.v`, section
@@ -288,6 +286,10 @@
   * `CCLib.backend.CminorSem` — small-step semantics of Cminor (`backend/Cminor.v`):
                        `eval_expr`, `step`, `semantics`, receptiveness and
                        determinacy.
+  * `CCLib.backend.CminorBigstep` — big-step semantics of Cminor
+                       (`backend/Cminor.v`): `exec_stmt`/`eval_funcall`,
+                       `execinf_stmt`/`evalinf_funcall` and
+                       `bigstep_semantics_sound`.
   * `CCLib.cfrontend.CsharpminorSem` — small-step semantics of Csharpminor
                        (`cfrontend/Csharpminor.v`), receptiveness and
                        determinacy.
@@ -336,8 +338,11 @@
   * `CCLib.backend.Kildall` — `backend/Kildall.v` + `PrimIter`: forward/backward dataflow solvers and their correctness theorems.
   * `CCLib.backend.Linearize` — `backend/Linearize.v` (+ `Linearizeaux.ml` heuristic): LTL → Linear.
   * `CCLib.backend.CleanupLabels` — `backend/CleanupLabels.v`: unused-label removal (Linear → Linear).
-  * `CCLib.powerpc.Builtins1`, `CCLib.arm.Builtins1` — `powerpc/Builtins1.v` (with both
-                       `builtin_sem` obligations proved) and `arm/Builtins1.v` (empty).
+  * `CCLib.powerpc.Builtins1` — `powerpc/Builtins1.v` (with both `builtin_sem`
+                       obligations proved).  `arm/Builtins1.v` declares no built-in, like
+                       aarch64's: it is the `PlatformBuiltin` of `CCLib.common.Builtins`.
+  * `CCLib.arm.PrintOp`, `CCLib.powerpc.PrintOp` — `arm/PrintOp.ml`, `powerpc/PrintOp.ml`
+                       (checked in `examples/PrintOpCheck.lean`).
   * `CCLib.arm.*`, `CCLib.powerpc.*` — the ARM and PowerPC back ends up to instruction
                        selection: `Op` (+ `OpTheory` for the lemmas of `Op.v`), `Machregs`,
                        `Locations`, `Conventions1` (all lemmas), `Conventions`, `Bounds`
@@ -399,11 +404,18 @@ import CCLib.cfrontend.ClightExec
 import CCLib.cfrontend.ClightExecSound
 import CCLib.lib.MapsLemmas
 import CCLib.lib.MapsTheory
+import CCLib.lib.MapsProperties
 import CCLib.logic.Heap
 import CCLib.logic.SepLogic
 import CCLib.logic.SepHoare
 import CCLib.logic.Funspec
 import CCLib.logic.FunspecVoid
+import CCLib.logic.Diverge
+import CCLib.logic.ExactTemps
+import CCLib.logic.ExactTempsHeap
+import CCLib.logic.PtrCompare
+import CCLib.logic.Globals
+import CCLib.logic.ForLoop
 import CCLib.logic.Tactics
 import CCLib.common.MemdataLemmas
 import CCLib.common.MemoryLemmas
@@ -417,12 +429,22 @@ import CCLib.logic.Hoare
 import CCLib.logic.HoareArray
 import CCLib.logic.HoareArrayInt
 import CCLib.logic.ArrayStore
+import CCLib.logic.ArrayInit
 import CCLib.logic.HoareLong
+import CCLib.logic.HoareArrayLong
+import CCLib.logic.HoareArray8
+import CCLib.logic.HoareArrayDouble
+import CCLib.logic.HoareArrayL64
 import CCLib.logic.Temps
 import CCLib.logic.FunPtr
 import CCLib.logic.Aggregate
 import CCLib.common.Linking
 import CCLib.logic.Locals
+import CCLib.logic.OneLocal
+import CCLib.logic.ListRep
+import CCLib.logic.ListNode
+import CCLib.logic.StructField
+import CCLib.logic.CString
 import CCLib.common.Determinism
 import CCLib.common.Smallstep
 import CCLib.common.Behaviors
@@ -431,7 +453,7 @@ import CCLib.cfrontend.ClightBehaviors
 import CCLib.cfrontend.ClightReceptive
 import CCLib.common.Simulation
 import CCLib.common.SimulationEventually
--- missing (to port): import CCLib.common.SimulationDeterm
+import CCLib.common.SimulationDeterm
 import CCLib.common.BackwardSimulation
 import CCLib.common.ForwardToBackward
 import CCLib.common.Bigstep
@@ -474,10 +496,9 @@ import CCLib.cfrontend.InitializersproofState
 import CCLib.cfrontend.InitializersproofMatch
 import CCLib.cfrontend.Initializersproof
 import CCLib.common.Worlds
--- missing (to port): import CCLib.common.DeterminismSem
--- missing (to port): import CCLib.common.SmallstepForever
--- missing (to port): import CCLib.common.BehaviorsInfSeq
--- missing (to port): import CCLib.common.EventsTraceinf
+import CCLib.common.DeterminismSem
+import CCLib.common.SmallstepForever
+import CCLib.common.EventsTraceinf
 import CCLib.cfrontend.Cexec
 import CCLib.cfrontend.CexecEvents
 import CCLib.cfrontend.CexecExpr
@@ -843,11 +864,7 @@ import CCLib.MenhirLib.Interpreter_correct
 import CCLib.MenhirLib.Interpreter_complete
 import CCLib.MenhirLib.Main
 import CCLib.common.Errors
--- missing (to port): import CCLib.common.Builtins0
--- missing (to port): import CCLib.aarch64.Builtins1
--- missing (to port): import CCLib.x86.Builtins1
--- missing (to port): import CCLib.riscV.Builtins1
--- missing (to port): import CCLib.driver.Compopts
+import CCLib.driver.Compopts
 import CCLib.cfrontend.Cminorgenproof
 import CCLib.cfrontend.Cshmgenproof
 import CCLib.cfrontend.SimplExprproof
@@ -859,8 +876,7 @@ import CCLib.backend.Selectionproof
 import CCLib.backend.Stackingproof
 import CCLib.backend.Unusedglobproof
 import CCLib.aarch64.Asmgenproof1
--- missing (to port): import CCLib.powerpc.Builtins1
--- missing (to port): import CCLib.arm.Builtins1
+import CCLib.powerpc.Builtins1
 import CCLib.arm.Op
 -- missing (to port): import CCLib.arm.OpTheory
 import CCLib.arm.Machregs
@@ -920,19 +936,18 @@ import CCLib.powerpc.Asmgen
 -- missing (to port): import CCLib.common.MemoryAxioms
 -- missing (to port): import CCLib.common.MemoryMemtype
 -- missing (to port): import CCLib.lib.MapsMore
--- missing (to port): import CCLib.common.SmallstepMore
+import CCLib.common.SmallstepMore
 -- missing (to port): import CCLib.backend.NeedDomainAgree
 -- missing (to port): import CCLib.common.MemdataMore
 -- missing (to port): import CCLib.lib.IntegersExtra
 -- missing (to port): import CCLib.lib.IntegersPrimed
 -- missing (to port): import CCLib.common.BehaviorsMore
--- missing (to port): import CCLib.backend.LocationsMore
+import CCLib.backend.LocationsMore
 -- missing (to port): import CCLib.common.EventsMore
 -- missing (to port): import CCLib.lib.UnionFindMore
 -- missing (to port): import CCLib.lib.LatticeMore
--- missing (to port): import CCLib.lib.MapsProperties
 -- missing (to port): import CCLib.backend.RTLMore
--- missing (to port): import CCLib.backend.CminorBigstep
+import CCLib.backend.CminorBigstep
 -- missing (to port): import CCLib.backend.RTLtypingComplete
 -- missing (to port): import CCLib.common.GlobalenvsLoadStore
 -- missing (to port): import CCLib.cfrontend.CtypesMore
@@ -944,7 +959,7 @@ import CCLib.cfrontend.CtypesAttr
 -- missing (to port): import CCLib.common.Builtins0Num
 -- missing (to port): import CCLib.common.GlobalenvsMatch
 import CCLib.lib.FloatsParsed
--- missing (to port): import CCLib.lib.MapsRemove
+import CCLib.lib.MapsRemove
 import CCLib.common.Switchaux
 import CCLib.backend.Regalloc
 import CCLib.lib.Camlcoq
@@ -999,7 +1014,7 @@ import CCLib.backend.PrintXTL
 import CCLib.lib.Commandline
 import CCLib.lib.Responsefile
 import CCLib.lib.Readconfig
--- missing (to port): import CCLib.lib.Printlines
+import CCLib.lib.Printlines
 import CCLib.driver.Configuration
 import CCLib.driver.Driveraux
 import CCLib.driver.Timing
@@ -1018,11 +1033,11 @@ import CCLib.lib.OCamlHashtbl
 -- missing (to port): import CCLib.driver.InterpPrintf
 import CCLib.driver.Interp
 import CCLib.backend.Json
--- missing (to port): import CCLib.backend.Fileinfo
--- missing (to port): import CCLib.cparser.deLexer
+import CCLib.backend.Fileinfo
+import CCLib.cparser.deLexer
 import CCLib.backend.JsonAST
--- missing (to port): import CCLib.arm.PrintOp
--- missing (to port): import CCLib.powerpc.PrintOp
+import CCLib.arm.PrintOp
+import CCLib.powerpc.PrintOp
 -- clightgen with the Lean backend (export/Export*.ml, export/Clightnorm.ml)
 import CCLib.exportclight.ExportLeanBase
 import CCLib.exportclight.ExportLeanCtypes

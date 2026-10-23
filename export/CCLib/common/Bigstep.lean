@@ -4,78 +4,18 @@
   `bigstep_sound`, `behavior_bigstep_terminates`, `behavior_bigstep_diverges`)
   that `cfrontend/ClightBigstep.v` relies on.
 
-  `Forever R s T` is Rocq's coinductive `forever`: an infinite run from `s`
-  whose events form (a stream extending) `T`.  It is a genuine `coinductive`
-  predicate here, so `Forever.coinduct` is the coinduction principle.
-
-  Rocq proves divergence through `forever_N` with a well-founded order; the
-  big-step proofs only ever use the empty order (each coinductive step makes at
-  least one transition), so `forever_of_plus` below packages exactly that case.
+  `Forever` (Rocq's coinductive `forever`) and its coinduction principles
+  (`forever_of_plus`, `foreverSilent_coind`) are in `CCLib.common.SmallstepForever`.
 -/
 import CCLib.common.Behaviors
+import CCLib.common.SmallstepForever
 
 namespace CC
 namespace Smallstep
 
 variable {σ : Type} {R : σ → Trace → σ → Prop}
 
-/-- `Smallstep.forever`: an infinite run from `s` with infinite trace `T`. -/
-coinductive Forever (R : σ → Trace → σ → Prop) : σ → Traceinf → Prop where
-  | intro {s1 t s2 T} : R s1 t s2 → Forever R s2 T → Forever R s1 (Eappinf t T)
-
-/-- Coinduction with `plus` steps (Rocq: `forever_N_forever` instantiated with
-    the empty order, together with `forever_N_plus`).  If every state/trace pair
-    satisfying `P` can make at least one transition and land in `P` again, then
-    `P` implies `Forever`. -/
-theorem forever_of_plus (P : σ → Traceinf → Prop)
-    (hP : ∀ s T, P s T → ∃ (s' : σ) (t : Trace) (T' : Traceinf),
-      Plus R s t s' ∧ P s' T' ∧ T = Eappinf t T') :
-    ∀ s T, P s T → Forever R s T := by
-  intro s T hsT
-  apply Forever.coinduct R
-    (fun (s : σ) (T : Traceinf) => ∃ (s' : σ) (t : Trace) (T' : Traceinf),
-      Star R s t s' ∧ P s' T' ∧ T = Eappinf t T')
-  · intro s T ⟨s', t, T', hst, hP', hT⟩
-    cases hst with
-    | refl =>
-      obtain ⟨s'', t'', T'', hplus, hP'', hT'⟩ := hP _ _ hP'
-      cases hplus with
-      | intro hr hs heq =>
-        refine ⟨_, _, _, hr, ⟨s'', _, T'', hs, hP'', rfl⟩, ?_⟩
-        subst heq; rw [hT, Eappinf_E0, hT', Eappinf_assoc]
-    | step hr hs heq =>
-      refine ⟨_, _, _, hr, ⟨s', _, T', hs, hP', rfl⟩, ?_⟩
-      subst heq; rw [hT, Eappinf_assoc]
-  · exact ⟨s, E0, T, .refl _, hsT, (Eappinf_E0 T).symm⟩
-
-/-- Rewrite the trace of a run. -/
-theorem Star.trace_cast {s1 t s2 t'} (h : Star R s1 t s2) (ht : t = t') : Star R s1 t' s2 :=
-  ht ▸ h
-
-/-- Inversion for `forever`. -/
-theorem Forever.inv {s T} (h : Forever R s T) :
-    ∃ t s' T', R s t s' ∧ Forever R s' T' ∧ T = Eappinf t T' := by
-  cases h with
-  | intro hr hf => exact ⟨_, _, _, hr, hf, rfl⟩
-
-/-- `Smallstep.star_forever` -/
-theorem star_forever {s1 t s2 T} (h1 : Star R s1 t s2) (h2 : Forever R s2 T) :
-    Forever R s1 (Eappinf t T) := by
-  induction h1 with
-  | refl => rw [Eappinf_E0]; exact h2
-  | step hr _ heq ih => subst heq; rw [Eappinf_assoc]; exact .intro R hr (ih h2)
-
-
 /-! ## Silent or reactive (`Behaviors.v`, `forever_silent_or_reactive`) -/
-
-/-- Coinduction principle for `forever_silent`. -/
-theorem foreverSilent_coind (P : σ → Prop) (hP : ∀ s, P s → ∃ s', R s E0 s' ∧ P s') :
-    ∀ s, P s → ForeverSilent R s := by
-  intro s hs
-  let next : {x // P x} → {x // P x} := fun x =>
-    ⟨Classical.choose (hP x.1 x.2), (Classical.choose_spec (hP x.1 x.2)).2⟩
-  let g : Nat → {x // P x} := fun n => Nat.rec ⟨s, hs⟩ (fun _ x => next x) n
-  exact ⟨fun n => (g n).1, rfl, fun n => (Classical.choose_spec (hP (g n).1 (g n).2)).1⟩
 
 /-- Coinduction principle for `forever_reactive`. -/
 theorem foreverReactive_coind (P : σ → Traceinf → Prop)

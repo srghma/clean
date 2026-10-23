@@ -117,13 +117,7 @@ def nameOfUnop : UnaryOperation → String
   | .Osingleoflongu => "singleoflongu"
 
 /-- `PrintCminor.comparison_name` -/
-def comparisonName : Comparison → String
-  | .Ceq => "=="
-  | .Cne => "!="
-  | .Clt => "<"
-  | .Cle => "<="
-  | .Cgt => ">"
-  | .Cge => ">="
+abbrev comparisonName : Comparison → String := PrintAST.comparisonName
 
 /-- `PrintCminor.name_of_binop` -/
 def nameOfBinop : BinaryOperation → String

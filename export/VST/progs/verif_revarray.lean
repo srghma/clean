@@ -190,10 +190,6 @@ private theorem no_ovf_mono (A : _root_.Int) (i l : Nat) (hil : i ≤ l)
     (h : A + 4 * (l : _root_.Int) < 18446744073709551616) :
     A + 4 * (i : _root_.Int) < 18446744073709551616 := by omega
 
-theorem readable_of_writable {p : Permission} (h : permOrder p .Writable = true) :
-    permOrder p .Readable = true := by
-  cases p <;> simp_all [permOrder, Permission.rank]
-
 section
 variable (ge : CGenv) (fe : EntryRel) (p : Permission) (b : Block)
 variable (ofs0 : Integers.Ptrofs) (L : Nat) (c : Nat → Integers.Int)

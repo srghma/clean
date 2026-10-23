@@ -34,6 +34,7 @@ import CCLib.riscV.CleanupLabels
 import CCLib.riscV.Debugvar
 import CCLib.riscV.Stacking
 import CCLib.riscV.Asmgen
+import CCLib.driver.Compopts
 
 namespace CC
 namespace RiscV
@@ -50,27 +51,9 @@ theorem frontendAbi_no_normalization (t : XType) :
     CC.Conventions1.returnValueNeedsNormalization frontendAbi t = false ∧
     CC.Conventions1.parameterNeedsNormalization frontendAbi t = false := ⟨rfl, rfl⟩
 
-/-- Compiler options (`Compopts.v`), target parameters, and the untrusted
+/-- Compiler options (`Compopts.v`, inherited from `CC.Compopts`), target parameters, and the untrusted
     components that CompCert implements outside Rocq (RISC-V back end). -/
-structure Config where
-  /-- `Compopts.optim_tailcalls` -/
-  optimTailcalls : Bool := true
-  /-- `Compopts.optim_constprop` -/
-  optimConstprop : Bool := true
-  /-- `Compopts.optim_CSE` -/
-  optimCSE : Bool := true
-  /-- `Compopts.optim_redundancy` -/
-  optimRedundancy : Bool := true
-  /-- `Compopts.debug` -/
-  debug : Bool := false
-  /-- `Compopts.optim_for_size` -/
-  optimForSize : Bool := false
-  /-- `Compopts.va_strict` -/
-  vaStrict : Bool := false
-  /-- `Compopts.propagate_float_constants` -/
-  propagateFloatConstants : Bool := true
-  /-- `Compopts.generate_float_constants` -/
-  generateFloatConstants : Bool := true
+structure Config extends CC.Compopts where
   /-- `SelectOp.symbol_is_relocatable` -/
   symbolIsRelocatable : Ident → Bool := fun _ => false
   /-- `SimplExpr.first_unused_ident` -/

@@ -9,9 +9,9 @@
   `transfer_use_def`, `transfer_aux`, `transfer`, the semilattice `LEq`,
   `successors_block_shape`, `analyze`, `compat_entry`,
   `check_entrypoints_aux`, `check_entrypoints`, `check_function`,
-  `transf_function`, `transf_fundef`, `transf_program`.  Also the parts of
-  `Locations.OrderedLoc` the validator needs (`compare`, `diff_low_bound`,
-  `diff_high_bound`).
+  `transf_function`, `transf_fundef`, `transf_program`.  The order
+  `Locations.OrderedLoc` (`compare`, `diff_low_bound`, `diff_high_bound`) is
+  in `CCLib.backend.LocationsMore`.
 
   Differences from Rocq:
   * Sets of equations (`eqs`, two AVL sets kept in sync, ordered by
@@ -34,50 +34,9 @@
 import CCLib.backend.RTLtyping
 import CCLib.backend.LTL
 import CCLib.backend.Kildall
+import CCLib.backend.LocationsMore
 
 namespace CC
-
-/-! ## The order `Locations.OrderedLoc` -/
-
-namespace OrderedLoc
-
-/-- `IndexedSlot.index` -/
-def slotIndex : Slot → Nat
-  | .Local => 1
-  | .Incoming => 2
-  | .Outgoing => 3
-
-/-- `IndexedTyp.index` -/
-def typIndex : ATyp → Nat
-  | .Tany32 => 1
-  | .Tint => 2
-  | .Tsingle => 3
-  | .Tany64 => 4
-  | .Tfloat => 5
-  | .Tlong => 6
-
-/-- `OrderedLoc.compare` (as an `Ordering`). -/
-def compare : Loc → Loc → Ordering
-  | .R r1, .R r2 => Ord.compare (Mreg.index r1).toNat (Mreg.index r2).toNat
-  | .R _, .S .. => .lt
-  | .S .., .R _ => .gt
-  | .S sl1 ofs1 ty1, .S sl2 ofs2 ty2 =>
-      (Ord.compare (slotIndex sl1) (slotIndex sl2)).then
-        ((Ord.compare ofs1 ofs2).then (Ord.compare (typIndex ty1) (typIndex ty2)))
-
-/-- `OrderedLoc.diff_low_bound` -/
-def diffLowBound (l : Loc) : Loc :=
-  match l with
-  | .R _ => l
-  | .S sl ofs _ => .S sl (ofs - 1) .Tany64
-
-/-- `OrderedLoc.diff_high_bound` -/
-def diffHighBound (l : Loc) : Loc :=
-  match l with
-  | .R _ => l
-  | .S sl ofs ty => .S sl (ofs + typesize ty - 1) .Tlong
-
-end OrderedLoc
 
 namespace Allocation
 

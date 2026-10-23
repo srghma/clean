@@ -41,6 +41,30 @@ theorem lt_repr (i j : _root_.Int) (hi1 : 0 ≤ i) (hi2 : i < 2147483648)
   show BitVec.slt _ _ = _
   rw [BitVec.slt_eq_decide, toInt_repr i hi1 hi2, toInt_repr j hj1 hj2]
 
+/-- `==` on `repr` of two in-range non-negatives is `=` on `Z`. -/
+theorem eq_repr (i j : _root_.Int) (hi1 : 0 ≤ i) (hi2 : i < 2147483648)
+    (hj1 : 0 ≤ j) (hj2 : j < 2147483648) :
+    Integers.Int.eq (Integers.Int.repr i) (Integers.Int.repr j) = decide (i = j) := by
+  show (Integers.Int.repr i == Integers.Int.repr j) = _
+  by_cases h : i = j
+  · subst h; simp
+  · have : Integers.Int.repr i ≠ Integers.Int.repr j := fun he => h (by
+      rw [← toInt_repr i hi1 hi2, ← toInt_repr j hj1 hj2, he])
+    simp [this, h]
+
+/-- `==` on `repr` of two values of the unsigned range is `=` on `Z`. -/
+theorem eq_repr_unsigned (i j : _root_.Int) (hi1 : 0 ≤ i) (hi2 : i < 4294967296)
+    (hj1 : 0 ≤ j) (hj2 : j < 4294967296) :
+    Integers.Int.eq (Integers.Int.repr i) (Integers.Int.repr j) = decide (i = j) := by
+  show (Integers.Int.repr i == Integers.Int.repr j) = _
+  by_cases h : i = j
+  · subst h; simp
+  · have : Integers.Int.repr i ≠ Integers.Int.repr j := fun he => h (by
+      have := congrArg BitVec.toNat he
+      simp only [Integers.Int.repr, Integers.MI.repr, BitVec.toNat_ofInt] at this
+      omega)
+    simp [this, h]
+
 /-! ## `unsigned int` arrays -/
 
 /-- The offset `Cop.sem_add` computes for `base + iv` when the element type is
@@ -111,15 +135,24 @@ attribute [local simp] Cop.semBinaryOperation Cop.semCmp Cop.classifyCmp typecon
 
 theorem semBinop_lt_int (cenv m) (x y : Integers.Int) :
     Cop.semBinaryOperation cenv .Olt (.Vint x) tint (.Vint y) tint m
-      = some (Val.ofBool (Integers.Int.lt x y)) := by simp [Integers.Int.lt, Integers.Int.ltu]
+      = some (Val.ofBool (Integers.Int.lt x y)) := by simp [Integers.Int.lt]
 
 theorem semBinop_le_int (cenv m) (x y : Integers.Int) :
     Cop.semBinaryOperation cenv .Ole (.Vint x) tint (.Vint y) tint m
-      = some (Val.ofBool (!Integers.Int.lt y x)) := by simp [Integers.Int.lt, Integers.Int.ltu]
+      = some (Val.ofBool (!Integers.Int.lt y x)) := by simp [Integers.Int.lt]
+
+theorem semBinop_eq_int (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Oeq (.Vint x) tint (.Vint y) tint m
+      = some (Val.ofBool (Integers.Int.eq x y)) := by
+  simp [Integers.Int.eq, Integers.MI.eq]
+
+theorem semBinop_gt_int (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Ogt (.Vint x) tint (.Vint y) tint m
+      = some (Val.ofBool (Integers.Int.lt y x)) := by simp [Integers.Int.lt]
 
 theorem semBinop_ltu_uint (cenv m) (x y : Integers.Int) :
     Cop.semBinaryOperation cenv .Olt (.Vint x) tuint (.Vint y) tuint m
-      = some (Val.ofBool (Integers.Int.ltu x y)) := by simp [Integers.Int.lt, Integers.Int.ltu]
+      = some (Val.ofBool (Integers.Int.ltu x y)) := by simp [Integers.Int.ltu]
 
 theorem semBinop_add_int (cenv m) (x y : Integers.Int) :
     Cop.semBinaryOperation cenv .Oadd (.Vint x) tint (.Vint y) tint m
@@ -128,6 +161,32 @@ theorem semBinop_add_int (cenv m) (x y : Integers.Int) :
 theorem semBinop_sub_int (cenv m) (x y : Integers.Int) :
     Cop.semBinaryOperation cenv .Osub (.Vint x) tint (.Vint y) tint m
       = some (.Vint (Integers.Int.sub x y)) := by simp [Integers.Int.sub, Integers.MI.sub]
+
+theorem semBinop_mul_int (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Omul (.Vint x) tint (.Vint y) tint m
+      = some (.Vint (Integers.Int.mul x y)) := by
+  simp [Cop.semMul, Integers.Int.mul, Integers.MI.mul]
+
+/-! ### `unsigned int` operands -/
+
+theorem semBinop_add_uint (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Oadd (.Vint x) tuint (.Vint y) tuint m
+      = some (.Vint (Integers.Int.add x y)) := by
+  simp [Integers.Int.add, Integers.MI.add]
+
+theorem semBinop_eq_uint_int (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Oeq (.Vint x) tuint (.Vint y) tint m
+      = some (Val.ofBool (Integers.Int.eq x y)) := by
+  simp [Integers.Int.eq, Integers.MI.eq]
+
+theorem semBinop_sub_uint_int (cenv m) (x y : Integers.Int) :
+    Cop.semBinaryOperation cenv .Osub (.Vint x) tuint (.Vint y) tint m
+      = some (.Vint (Integers.Int.sub x y)) := by
+  simp [Integers.Int.sub, Integers.MI.sub]
+
+theorem semCast_uint (m : Mem) (v : Integers.Int) :
+    Cop.semCast (.Vint v) tuint tuint m = some (.Vint v) := by
+  simp
 
 /-- A comparison result is a usable `int` truth value. -/
 theorem boolVal_ofBool_int (m) (bb : Bool) : Cop.boolVal (Val.ofBool bb) tint m = some bb := by
