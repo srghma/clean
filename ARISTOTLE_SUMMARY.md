@@ -1,23 +1,25 @@
-# Summary of changes for run d59749bd-0bcf-44ef-b0b7-cecfea0e9c51
-The interpreter tests are now an `IO` test suite in the style of hspec, run from the `main` function of a new executable, `interpspec`. `lake test` runs it, and so does `lake exe interpspec`. A full run finishes with **14 examples, 0 failures** in about 36 s. The work is committed and pushed, and `Hspec`, `interpspec` and `ccomp` all build.
+# Summary of changes for run f79d2d10-582b-460e-a82a-2f4879c2e4a7
+I added more of the CompCert backend and three more VST test ports to the Lean port. `lake build CCLib VST` succeeds, and none of the new files contain `sorry`.
 
-**What's new**
-- **`export/examples/Hspec.lean`** is a small hspec-like test framework.
-  - You write tests with `describe`/`context`/`it`/`xit` in a `do` block, and check results with `shouldBe`, `shouldNotBe`, `shouldSatisfy`, `shouldContain`, `shouldNotContain` and `shouldThrow`.
-  - It prints a tree of ✔/✘ results with the time each example took, then a numbered list of failures, `N examples, M failures` and the total time. The exit code is 0 only if every example passed.
-  - Like hspec, `-m`/`--match PATTERN` runs only matching examples and `--skip PATTERN` skips them.
-  - `withTimeout ms` runs an example in its own thread and fails it if it hasn't finished in time.
-- **`export/examples/InterpSpec.lean`** contains the tests. Each one writes a C program to a temporary directory, runs the driver with `-interp` inside the test process, captures what it prints, and checks the output and exit code.
-  - It covers recursion, loops/`switch`/`goto`, structs (`-fstruct-passing`), `malloc`/`free`, volatile accesses, `printf` formatting (expected output checked against gcc), undefined behaviour (exit code 126), `main(argc, argv)`, `void main`, `-random`, and stopping a program that never ends when its time limit runs out.
-  - The `-all` tests check both results of an unspecified evaluation order, and a loop with two unordered calls per iteration: 4 iterations give 4 final states, and 10 iterations (about 485 steps) give 256. The 10-iteration test has a 300 s limit and takes about 35 s.
-- **`lakefile.toml`** now has the `interpspec` executable, `testDriver = "interpspec"`, and `Hspec` added to the `Examples` library.
+**CompCert**
+- `export/CCLib/backend/MachSyntax.lean`: Mach syntax (instructions, functions, programs, leaf-function check) that all targets share. It takes each target's operation, addressing, condition and register types as parameters.
+- `export/CCLib/arm/Asmgen.lean` and `export/CCLib/powerpc/Asmgen.lean`: full ports of `arm/Asmgen.v` and `powerpc/Asmgen.v`. Each includes a proof that the two code-translation functions (`transl_code'` and `transl_code`) agree. With these in place, `arm/Asmexpand` and `powerpc/Asmexpand` build again.
+- `MISSING_MODULES.md` is regenerated: 351 modules are still missing, 93 of which should be ported. It no longer has a "blocked" section.
 
-**Why `-all` grows on larger programs**
-On the loop program the number of states doubles every iteration: \(n\) iterations end in \(2^{n-2}\) identical-looking final states. Freeing a function's stack frame only removes access permissions; the frame's contents stay in memory. When the two calls run in opposite orders, the leftover frames hold different values. States are compared by their whole memory, so those states never merge.
+**Program logic (used by the VST tests)**
+- `export/CCLib/logic/HoareArrayInt.lean`: lemmas for indexing signed `int` arrays, integer casts and negation.
+- `export/CCLib/logic/ArrayStore.lean`: a Hoare rule for storing into an `int` array.
+- `export/CCLib/logic/FunspecVoid.lean`: support for `void` functions that return by reaching the end of their body.
 
-The OCaml interpreter compares memory the same way (`compare_mem` in `driver/Interp.ml` compares the raw `mem_contents`), so it should grow the same way on this program. That conclusion comes from reading the OCaml source; I couldn't run the OCaml interpreter here.
+**VST test ports**
+- `export/VST/progs/verif_min.lean`: proves that `minimum` meets its spec and returns the signed minimum of the list.
+- `export/VST/progs/verif_loop_minus1.lean`: reuses the spec from the existing sumarray port instead of defining a new one.
+- `export/VST/progs/verif_revarray.lean`: proves that `reverse` meets its spec.
 
-**Changes to `export/CCLib/driver/Interp.lean`**
-- **Faster `-all`:** state comparison now builds its keys with dedicated printers instead of `reprStr`. States are still merged by exactly the same components, but runs are about 4–5× faster: 6 iterations went from 9.7 s to 2.3 s, and 9 iterations from 86 s to 18 s.
-- **Stopping long runs:** a run now stops with exit code 124 when the thread running it is cancelled, which is how the test time limit stops it.
-- The file header documents both changes.
+**Where things stand**
+- I followed your guidelines: existing core/Batteries code is reused, there are no duplicate per-target copies, and floats still use the `Float.Model` port rather than Flocq.
+- I added "Status update 73" to `PORT_GAP_ANALYSIS.md` describing this work. `export/CCLib.lean` imports the new modules.
+- Two axioms that were already in the project, `CC.externalFunctionsSem` and `CC.inlineAssemblySem` in `export/CCLib/common/Events.lean`, still show up in the axiom lists of the VST theorems. I left them unchanged.
+- The rest of the porting work is listed in `MISSING_MODULES.md`.
+
+Everything is committed and pushed.

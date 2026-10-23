@@ -403,6 +403,7 @@ import CCLib.logic.Heap
 import CCLib.logic.SepLogic
 import CCLib.logic.SepHoare
 import CCLib.logic.Funspec
+import CCLib.logic.FunspecVoid
 import CCLib.logic.Tactics
 import CCLib.common.MemdataLemmas
 import CCLib.common.MemoryLemmas
@@ -414,6 +415,8 @@ import CCLib.common.MemoryInjections
 import CCLib.common.MemoryDrop
 import CCLib.logic.Hoare
 import CCLib.logic.HoareArray
+import CCLib.logic.HoareArrayInt
+import CCLib.logic.ArrayStore
 import CCLib.logic.HoareLong
 import CCLib.logic.Temps
 import CCLib.logic.FunPtr
@@ -549,6 +552,7 @@ import CCLib.backend.Renumber
 import CCLib.backend.LTL
 import CCLib.backend.Linear
 import CCLib.backend.Mach
+import CCLib.backend.MachSyntax
 import CCLib.lib.UnionFind
 import CCLib.backend.Tunneling
 import CCLib.lib.Lattice
@@ -857,9 +861,9 @@ import CCLib.backend.Unusedglobproof
 import CCLib.aarch64.Asmgenproof1
 -- missing (to port): import CCLib.powerpc.Builtins1
 -- missing (to port): import CCLib.arm.Builtins1
--- missing (to port): import CCLib.arm.Op
+import CCLib.arm.Op
 -- missing (to port): import CCLib.arm.OpTheory
--- missing (to port): import CCLib.arm.Machregs
+import CCLib.arm.Machregs
 -- missing (to port): import CCLib.arm.Conventions1
 -- missing (to port): import CCLib.arm.Stacklayout
 -- missing (to port): import CCLib.arm.CombineOp
@@ -875,11 +879,11 @@ import CCLib.aarch64.Asmgenproof1
 -- missing (to port): import CCLib.arm.SelectOpproof2
 -- missing (to port): import CCLib.arm.SelectOpproof3
 -- missing (to port): import CCLib.arm.SelectLongproof
--- missing (to port): import CCLib.arm.Asm
--- missing (to port): import CCLib.arm.Asmgen
--- missing (to port): import CCLib.powerpc.Op
+import CCLib.arm.Asm
+import CCLib.arm.Asmgen
+import CCLib.powerpc.Op
 -- missing (to port): import CCLib.powerpc.OpTheory
--- missing (to port): import CCLib.powerpc.Machregs
+import CCLib.powerpc.Machregs
 -- missing (to port): import CCLib.powerpc.Conventions1
 -- missing (to port): import CCLib.powerpc.Stacklayout
 -- missing (to port): import CCLib.powerpc.CombineOp
@@ -896,8 +900,8 @@ import CCLib.aarch64.Asmgenproof1
 -- missing (to port): import CCLib.powerpc.SelectOpproof3
 -- missing (to port): import CCLib.powerpc.SelectLongproof
 -- missing (to port): import CCLib.powerpc.SelectLongproof2
--- missing (to port): import CCLib.powerpc.Asm
--- missing (to port): import CCLib.powerpc.Asmgen
+import CCLib.powerpc.Asm
+import CCLib.powerpc.Asmgen
 -- missing (to port): import CCLib.arm.Asmgenproof0
 -- missing (to port): import CCLib.arm.Asmgenproof1
 -- missing (to port): import CCLib.arm.Asmgenproof1Cond
@@ -955,13 +959,13 @@ import CCLib.x86.Asmexpand
 import CCLib.x86.TargetPrinter
 import CCLib.aarch64.Asmexpand
 import CCLib.aarch64.TargetPrinter
--- blocked: import CCLib.arm.Constantexpand
--- blocked: import CCLib.arm.Asmexpand
--- blocked: import CCLib.arm.TargetPrinter
--- blocked: import CCLib.arm.AsmToJSON
--- blocked: import CCLib.powerpc.Asmexpand
--- blocked: import CCLib.powerpc.TargetPrinter
--- blocked: import CCLib.powerpc.AsmToJSON
+import CCLib.arm.Constantexpand
+import CCLib.arm.Asmexpand
+import CCLib.arm.TargetPrinter
+import CCLib.arm.AsmToJSON
+import CCLib.powerpc.Asmexpand
+import CCLib.powerpc.TargetPrinter
+import CCLib.powerpc.AsmToJSON
 import CCLib.backend.Machregsnames
 import CCLib.backend.Linearizeaux
 import CCLib.backend.AisAnnot
@@ -975,8 +979,8 @@ import CCLib.aarch64.PrintOp
 import CCLib.x86.PrintOp
 import CCLib.riscV.PrintOp
 import CCLib.aarch64.Machregsaux
--- blocked: import CCLib.arm.Machregsaux
--- blocked: import CCLib.powerpc.Machregsaux
+import CCLib.arm.Machregsaux
+import CCLib.powerpc.Machregsaux
 import CCLib.riscV.Machregsaux
 import CCLib.x86.Machregsaux
 import CCLib.backend.PrintRTL
@@ -1013,9 +1017,15 @@ import CCLib.debug.Dwarfgen
 import CCLib.lib.OCamlHashtbl
 -- missing (to port): import CCLib.driver.InterpPrintf
 import CCLib.driver.Interp
--- missing (to port): import CCLib.backend.Json
+import CCLib.backend.Json
 -- missing (to port): import CCLib.backend.Fileinfo
 -- missing (to port): import CCLib.cparser.deLexer
--- missing (to port): import CCLib.backend.JsonAST
+import CCLib.backend.JsonAST
 -- missing (to port): import CCLib.arm.PrintOp
 -- missing (to port): import CCLib.powerpc.PrintOp
+-- clightgen with the Lean backend (export/Export*.ml, export/Clightnorm.ml)
+import CCLib.exportclight.ExportLeanBase
+import CCLib.exportclight.ExportLeanCtypes
+import CCLib.exportclight.ExportLeanClight
+import CCLib.exportclight.Clightnorm
+import CCLib.exportclight.ExportDriver

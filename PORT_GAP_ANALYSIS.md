@@ -4,6 +4,21 @@ Scope: the Lean 4 port in `export/` (`CCLib/`, `Clightdefs.lean`, `examples/`)
 compared with the Rocq sources in this tree (`lib/`, `common/`, `cfrontend/`,
 `aarch64/`). Measured against CompCert 3.17 (`VERSION`).
 
+## Status update 73 (Mach syntax; `arm`/`powerpc` `Asmgen`; VST progs)
+
+- `backend/MachSyntax.lean`: target-generic Mach syntax (instructions,
+  functions, programs, `isLeafFunction`), parameterised by the target's
+  operation/addressing/condition/register types.
+- `arm/Asmgen.lean` and `powerpc/Asmgen.lean`: ports of `arm/Asmgen.v` and
+  `powerpc/Asmgen.v`, including the `transl_code'`/`transl_code` equivalence.
+  They unblock `arm/Asmexpand` and `powerpc/Asmexpand`, which build again.
+- Program logic: `logic/HoareArrayInt.lean` (signed `int` array indexing,
+  casts, negation), `logic/ArrayStore.lean` (Hoare rule for a store into an
+  `int` array), `logic/FunspecVoid.lean` (void functions that fall off their end).
+- VST test ports, all without `sorry`: `VST/progs/verif_min.lean`,
+  `VST/progs/verif_loop_minus1.lean` and `VST/progs/verif_revarray.lean`.
+- `MISSING_MODULES.md` regenerated.
+
 ## Status update 72 (module audit: modules that should not exist, restored modules, splits)
 
 See `MODULE_AUDIT.md` (analysis and plan) and the regenerated

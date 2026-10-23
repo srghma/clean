@@ -6,7 +6,7 @@ scans every `import` line of `export/`, `test/` and `main.lean` and classifies e
 repository.  The analysis behind the verdicts, and the same analysis for the modules
 that exist, is in `MODULE_AUDIT.md`.
 
-Missing modules: **361**, of which **103 should be ported** and
+Missing modules: **351**, of which **93 should be ported** and
 **258 should not exist** in the Lean port.  `export/CCLib.lean` lists the
 first group as `-- missing (to port): import …`; the second group has been removed
 from it (their remaining importers, if any, are listed below and must be refactored).
@@ -29,9 +29,7 @@ target-specific files (these need the target-generic back end first, see
 
 | module | Rocq/OCaml source | kind | priority | present importers |
 |---|---|---|---|---|
-| `CCLib.arm.Asm` | `arm/Asm.v` | whole file | P1 | `export/CCLib/arm/Constantexpand.lean`, `export/CCLib/arm/TargetPrinter.lean` |
 | `CCLib.arm.AsmDeterm` | `arm/Asm.v` | chunk | P3 |  |
-| `CCLib.arm.Asmgen` | `arm/Asmgen.v` | whole file | P1 | `export/CCLib/arm/Asmexpand.lean` |
 | `CCLib.arm.Asmgenproof` | `arm/Asmgenproof.v` | whole file | P3 |  |
 | `CCLib.arm.Asmgenproof0` | `arm/Asmgenproof.v` | chunk | P3 |  |
 | `CCLib.arm.Asmgenproof1` | `arm/Asmgenproof1.v` | whole file | P3 |  |
@@ -44,9 +42,7 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.arm.ConstpropOpproof` | `arm/ConstpropOpproof.v` | whole file | P3 |  |
 | `CCLib.arm.ConstpropOpproof2` | `arm/ConstpropOpproof.v` | chunk | P3 |  |
 | `CCLib.arm.Conventions1` | `arm/Conventions1.v` | whole file | P3 |  |
-| `CCLib.arm.Machregs` | `arm/Machregs.v` | whole file | P1 | `export/CCLib/arm/Machregsaux.lean` |
 | `CCLib.arm.NeedOp` | `arm/NeedOp.v` | whole file | P3 |  |
-| `CCLib.arm.Op` | `arm/Op.v` | whole file | P1 | `export/examples/ArmPpcPtr64Gap.lean` |
 | `CCLib.arm.OpInject` | `arm/Op.v` | chunk | P3 |  |
 | `CCLib.arm.OpTheory` | `arm/Op.v` | chunk | P3 |  |
 | `CCLib.arm.PrintOp` | `arm/PrintOp.ml` | whole file | P3 |  |
@@ -65,8 +61,6 @@ target-specific files (these need the target-generic back end first, see
 |---|---|---|---|---|
 | `CCLib.backend.CminorBigstep` | `backend/Cminor.v` | chunk | P2 |  |
 | `CCLib.backend.Fileinfo` | `backend/Fileinfo.ml` | whole file | P2 |  |
-| `CCLib.backend.Json` | `backend/Json.ml` | whole file | P2 |  |
-| `CCLib.backend.JsonAST` | `backend/JsonAST.ml` | whole file | P1 | `export/CCLib/arm/AsmToJSON.lean`, `export/CCLib/powerpc/AsmToJSON.lean` |
 | `CCLib.backend.LocationsMore` | `backend/Locations.v` | chunk | P2 |  |
 | `CCLib.backend.NeedDomainAgree` | `backend/NeedDomain.v` | chunk | P2 |  |
 | `CCLib.backend.RTLMore` | `backend/RTL.v` | chunk | P2 |  |
@@ -134,9 +128,7 @@ target-specific files (these need the target-generic back end first, see
 
 | module | Rocq/OCaml source | kind | priority | present importers |
 |---|---|---|---|---|
-| `CCLib.powerpc.Asm` | `powerpc/Asm.v` | whole file | P1 | `export/CCLib/powerpc/TargetPrinter.lean` |
 | `CCLib.powerpc.AsmDeterm` | `powerpc/Asm.v` | chunk | P3 |  |
-| `CCLib.powerpc.Asmgen` | `powerpc/Asmgen.v` | whole file | P1 | `export/CCLib/powerpc/Asmexpand.lean` |
 | `CCLib.powerpc.Asmgenproof` | `powerpc/Asmgenproof.v` | whole file | P3 |  |
 | `CCLib.powerpc.Asmgenproof0` | `powerpc/Asmgenproof.v` | chunk | P3 |  |
 | `CCLib.powerpc.Asmgenproof1` | `powerpc/Asmgenproof1.v` | whole file | P3 |  |
@@ -149,9 +141,7 @@ target-specific files (these need the target-generic back end first, see
 | `CCLib.powerpc.ConstpropOpproof` | `powerpc/ConstpropOpproof.v` | whole file | P3 |  |
 | `CCLib.powerpc.ConstpropOpproof2` | `powerpc/ConstpropOpproof.v` | chunk | P3 |  |
 | `CCLib.powerpc.Conventions1` | `powerpc/Conventions1.v` | whole file | P3 |  |
-| `CCLib.powerpc.Machregs` | `powerpc/Machregs.v` | whole file | P1 | `export/CCLib/powerpc/Machregsaux.lean` |
 | `CCLib.powerpc.NeedOp` | `powerpc/NeedOp.v` | whole file | P3 |  |
-| `CCLib.powerpc.Op` | `powerpc/Op.v` | whole file | P1 | `export/examples/ArmPpcPtr64Gap.lean` |
 | `CCLib.powerpc.OpInject` | `powerpc/Op.v` | chunk | P3 |  |
 | `CCLib.powerpc.OpTheory` | `powerpc/Op.v` | chunk | P3 |  |
 | `CCLib.powerpc.PrintOp` | `powerpc/PrintOp.ml` | whole file | P3 |  |
@@ -268,18 +258,9 @@ target-specific files (these need the target-generic back end first, see
 * `CCLib.riscV.*` (7): `CompilerMatch`, `Driver`, `Inliningaux`, `RTLgenaux`, `RTLtypingComplete`, `Selectionaux`, `UnusedglobproofLink`
 * `CCLib.x86.*` (7): `CompilerMatch`, `Driver`, `Inliningaux`, `RTLgenaux`, `RTLtypingComplete`, `Selectionaux`, `UnusedglobproofLink`
 
-Present importers that must be refactored: `CCLib.arm.Locations` ← `export/examples/ArmPpcPtr64Gap.lean`; `CCLib.riscV.Driver` ← `export/examples/RegallocCheck.lean`, `export/examples/RiscVAsmCheck.lean`; `CCLib.x86.Driver` ← `export/examples/RegallocCheck.lean`
+Present importers that must be refactored: `CCLib.riscV.Driver` ← `export/examples/RegallocCheck.lean`, `export/examples/RiscVAsmCheck.lean`; `CCLib.x86.Driver` ← `export/examples/RegallocCheck.lean`
 
 ## 3. Present modules that do not build because they import a missing module
 
 | module | missing modules it (transitively) needs |
 |---|---|
-| `CCLib.arm.AsmToJSON` | `CCLib.arm.Asm`, `CCLib.backend.JsonAST` |
-| `CCLib.arm.Asmexpand` | `CCLib.arm.Asm`, `CCLib.arm.Asmgen` |
-| `CCLib.arm.Constantexpand` | `CCLib.arm.Asm` |
-| `CCLib.arm.Machregsaux` | `CCLib.arm.Machregs` |
-| `CCLib.arm.TargetPrinter` | `CCLib.arm.Asm` |
-| `CCLib.powerpc.AsmToJSON` | `CCLib.backend.JsonAST`, `CCLib.powerpc.Asm` |
-| `CCLib.powerpc.Asmexpand` | `CCLib.powerpc.Asmgen` |
-| `CCLib.powerpc.Machregsaux` | `CCLib.powerpc.Machregs` |
-| `CCLib.powerpc.TargetPrinter` | `CCLib.powerpc.Asm` |
