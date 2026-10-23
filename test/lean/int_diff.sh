@@ -8,7 +8,7 @@
 # Requirements:
 #   - CompCert's Rocq development built (make proof), with coqc on PATH:
 #       eval $(opam env --switch=compcert-4.14)
-#   - lean on PATH (see export/lean-toolchain)
+#   - lean on PATH (see lean-toolchain at the repository root)
 #
 # Exit status 0 iff every case agrees.
 

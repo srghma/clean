@@ -4,6 +4,20 @@ Scope: the Lean 4 port in `export/` (`CCLib/`, `Clightdefs.lean`, `examples/`)
 compared with the Rocq sources in this tree (`lib/`, `common/`, `cfrontend/`,
 `aarch64/`). Measured against CompCert 3.17 (`VERSION`).
 
+## Status update 72 (module audit: modules that should not exist, restored modules, splits)
+
+See `MODULE_AUDIT.md` (analysis and plan) and the regenerated
+`MISSING_MODULES.md`. In short: the Flocq port (`flocq/`, root `CCLibReal`) was
+removed, because the float semantics uses the `Float.Model` backport
+`lib/FloatModel.lean`. Some modules were deleted because they duplicate Lean
+core (`lib/{BoolEqual, Decidableplus, Wfsimpl}`); others were deleted because
+they were per-target copies of shared files (`{arm, powerpc}/{Stacking,
+Compiler}`). `cparser/Cabs`, `common/Errors`, `lib/FloatsParsed` (float literals, on the `Float.Model` backport) and `driver/Clflags` were restored, so `cparser/{Cabshelper, ElabBase}` and `cfrontend/{C2CBase, C2C}` build again.
+`lib/MathlibEquiv` builds again, as the root `CCLibMathlib`. Seven files over
+1000 lines were split. The status updates below that mention `CCLibReal`, the
+real-number Flocq files or `flocq/Core/MathlibEquiv.lean` describe files that
+no longer exist.
+
 ## Status update 69 (Mathlib; Flocq over the real numbers: `round`, `mag`, `Bsqrt_correct`, square-root error bounds)
 
 **Toolchain.** The repository-root `lakefile.toml` now requires Mathlib
@@ -11,8 +25,8 @@ compared with the Rocq sources in this tree (`lib/`, `common/`, `cfrontend/`,
 `520045ab14e26149ee970e2e617ca04b09bde5d6`, which is built for
 `leanprover/lean4:v4.32.1`); `lake-manifest.json` lists it and its
 dependencies. The `CCLib` root still imports Lean core only, so `import CCLib`
-does not load Mathlib, and `export/lakefile.toml` (no Mathlib) still builds
-it. The Mathlib-based modules form a second root, `CCLibReal`
+does not load Mathlib. (`export/lakefile.toml` and `export/lean-toolchain`
+have since been removed; the root files are the only Lake configuration.) The Mathlib-based modules form a second root, `CCLibReal`
 (`export/CCLibReal.lean`). The library of generated test programs is now called
 `CCTest`, with source directory `test/`, so its modules are `lean.<file>`
 (e.g. `lean.demo`, imported by `examples/AsmTestPrograms.lean`) instead of

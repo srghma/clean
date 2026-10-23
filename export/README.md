@@ -70,12 +70,12 @@ generated files (it is not compiled by the CompCert Rocq build).
 
 ### Typechecking generated files
 
-A minimal Lake project is provided (`lakefile.toml`, `lean-toolchain`).
+The Lake project is the one at the repository root (`lakefile.toml`,
+`lean-toolchain`), which uses `export/` as its source directory.
 `Demo.lean` is a representative generated file exercising every construct.
 
 ```
-   cd export
-   lake build            # typechecks Clightdefs.lean and Demo.lean
+   lake build            # from the repository root; typechecks Clightdefs.lean and Demo.lean
 ```
 
 To typecheck one generated file `foo.lean` without Lake, place it next to

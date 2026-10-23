@@ -36,8 +36,9 @@
     propagation, CSE, redundancy elimination on; debug information off).
   * **Printing and timing** (`Compiler.print_*`, `Compiler.time`): identities,
     as `Compiler.print` and `Compiler.time` already are.
-  * **Target directives** (`Load extractionMachdep`):
-    `CCLib/aarch64/extractionMachdep.lean`.
+  * **Target directives** (`Load extractionMachdep`, i.e.
+    `aarch64/extractionMachdep.v`): the section *Target settings* below
+    (`ExtractionMachdep.Target`, `ExtractionMachdep.configure`).
   * Directives about OCaml itself (`Extract Inlined Constant` for
     `Datatypes`, `Extraction Inline`, `Extraction Blacklist`, the `Cabs`
     types, `Set Extraction AccessOpaque`) have no Lean counterpart.
@@ -51,7 +52,6 @@
   `defaultConfig` on the example Clight programs.
 -/
 import CCLib.driver.Compiler
-import CCLib.aarch64.extractionMachdep
 import CCLib.backend.Regalloc
 import CCLib.common.Switchaux
 import CCLib.cfrontend.Cexec
@@ -68,6 +68,58 @@ import CCLib.backend.Inliningaux
 import CCLib.driver.CompilerCorrect
 
 namespace CC
+
+/-! ## Target settings (`aarch64/extractionMachdep.v`)
+
+The Rocq file binds three target parameters to OCaml code that reads the
+configuration (`Configuration.abi`, `Configuration.system`) and the atom
+table of `C2C`:
+
+* `Archi.abi` ↦ `Apple` if `Configuration.abi = "apple"`, else `AAPCS64`;
+* `SelectOp.symbol_is_relocatable` ↦ `C2C.atom_is_external` on macOS,
+  `C2C.atom_needs_GOT_access` otherwise;
+* `Asmgen.symbol_is_aligned` ↦ `C2C.atom_is_aligned`.
+
+(`Asm.symbol_low`/`symbol_high` are `assert false` in OCaml; they are not
+parameters of the Lean port.)  Here the configuration strings are the fields
+`abi` and `system` of `Target`, and the two `C2C` queries are fields too; by
+default no symbol is relocatable or known to be aligned, which is the
+conservative choice for both. -/
+namespace ExtractionMachdep
+
+/-- The target parameters read by `aarch64/extractionMachdep.v`. -/
+structure Target where
+  /-- `Configuration.abi` (`"standard"` or `"apple"`) -/
+  abi : String := "standard"
+  /-- `Configuration.system` (`"linux"` or `"macos"`) -/
+  system : String := "linux"
+  /-- `C2C.atom_is_external` (used on macOS) -/
+  atomIsExternal : Ident → Bool := fun _ => false
+  /-- `C2C.atom_needs_GOT_access` (used on other systems) -/
+  atomNeedsGOTAccess : Ident → Bool := fun _ => false
+  /-- `C2C.atom_is_aligned` -/
+  atomIsAligned : Ident → Z → Bool := fun _ _ => false
+
+/-- `Archi.abi` -/
+def abi (s : String) : Conventions1.AbiKind :=
+  if s = "apple" then .Apple else .AAPCS64
+
+/-- `SelectOp.symbol_is_relocatable` -/
+def symbolIsRelocatable (t : Target) : Ident → Bool :=
+  if t.system = "macos" then t.atomIsExternal else t.atomNeedsGOTAccess
+
+/-- Apply the target settings to a compiler configuration. -/
+def configure (t : Target) (c : Compiler.Config) : Compiler.Config :=
+  { c with
+    abi := abi t.abi
+    symbolIsRelocatable := symbolIsRelocatable t
+    symbolIsAligned := t.atomIsAligned }
+
+theorem abi_standard : abi "standard" = .AAPCS64 := by simp [abi]
+theorem abi_apple : abi "apple" = .Apple := by simp [abi]
+
+end ExtractionMachdep
+
 namespace Extraction
 
 /-- The compiler configuration with every untrusted oracle bound to its Lean

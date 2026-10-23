@@ -1,21 +1,28 @@
 # Code in the Lean port that duplicates Mathlib, Batteries or Lean core
 
 The `CCLib` library (`export/CCLib`) imports only Lean core. That keeps
-`import CCLib` light and lets `export/lakefile.toml` build without Mathlib,
+`import CCLib` light (it does not load Mathlib, although the root
+`lakefile.toml`, the only Lake configuration, requires it),
 but it means the port re-implements several standard notions. This file lists
 them, the library definition each one duplicates, and whether a Lean proof
 connects the two.
 
-**Bridge files.** Each entry marked *proved* has a theorem stating that the
-port's definition equals (or is equivalent to) the library one:
+**Bridge file.** Each entry marked *proved* has a theorem stating that the
+port's definition equals (or is equivalent to) the library one, in
+`export/CCLib/lib/MathlibEquiv.lean` (namespace `CC.MathlibEquiv`, root
+`CCLibMathlib`, `lake build CCLibMathlib`). It contains no `sorry`.
 
-* `export/CCLib/lib/MathlibEquiv.lean` (namespace `CC.MathlibEquiv`)
-* `export/CCLib/flocq/Core/MathlibEquiv.lean` (namespace `CC.Flocq.MathlibEquiv`)
-
-Both are part of the `CCLibReal` root (`lake build CCLibReal`). They contain
-no `sorry`, and their theorems depend only on `propext`, `Classical.choice`
-and `Quot.sound`. You can use these theorems to rewrite the port's
-definitions into the library ones.
+**Update (module audit, see `MODULE_AUDIT.md`).** The modules `lib/Coqlib`,
+`lib/CoqlibMore`, `lib/Zbits`, `lib/Intv` (missing from this checkout) should
+not exist: they duplicate core/Batteries/Mathlib, and the built library does
+not use them. `lib/BoolEqual`, `lib/Decidableplus` and `lib/Wfsimpl` were
+deleted for the same reason. The Flocq port (`flocq/`, including
+`flocq/Core/MathlibEquiv.lean`) was removed: the float semantics uses the
+`Float.Model` backport instead. The rows below about these modules are kept
+as a record of what the duplicates were; their bridge theorems were removed
+with the modules. The bridges that remain are those for `ListForall2`,
+`OptionRel` (`common/LinkingTheory.lean`), `zdiv`, `floorZ`, `align`
+(`cfrontend/Ctypes.lean`), `Positive ≃ PosNum` and `Parmov.Star`.
 
 **How to replace them.** Swapping a definition inside `CCLib` itself means
 `CCLib` has to depend on Mathlib (or Batteries). For a definition that is

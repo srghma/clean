@@ -31,6 +31,8 @@
 import CCLib.extraction.extraction
 import CCLib.aarch64.Asmexpand
 import CCLib.aarch64.TargetPrinter
+import CCLib.aarch64.CBuiltins
+import CCLib.aarch64.Machregsaux
 import CCLib.driver.Frontend
 import CCLib.driver.CommonOptions
 import CCLib.driver.Timing
@@ -38,6 +40,7 @@ import CCLib.driver.Assembler
 import CCLib.driver.Linker
 import CCLib.debug.DebugInit
 import CCLib.cfrontend.PrintCsyntax
+import CCLib.driver.Interp
 
 namespace CC
 namespace Driver
@@ -541,6 +544,75 @@ def main (tgt : Target) (progName : String) (args : List String)
   | .ok code => return code
   | .error (.Exit n) => return n
   | .error _ => return 2
+
+/-! ## The AArch64 target -/
+
+/-- The configuration written by `./configure aarch64-linux`, without the
+    run-time library and the standard headers (as `Configuration.x86_64_linux`). -/
+def aarch64_linux : Configuration.Config :=
+  { arch := "aarch64", model := "default", abi := "standard", is_big_endian := false,
+    system := "linux",
+    prepro := ["gcc", "-U__GNUC__", "-E"],
+    asm := ["gcc", "-c"],
+    linker := ["gcc"],
+    asm_supports_cfi := true, stdlib_path := "", has_runtime_lib := false,
+    has_standard_headers := false, response_file_style := .Gnu, pic_supported := true }
+
+/-- The compiler options of `Compopts.v` (read from `Clflags` in OCaml). -/
+def compilerConfig (fl : Clflags.Flags) (c : Compiler.Config) : Compiler.Config :=
+  { c with
+    optimTailcalls := fl.option_ftailcalls
+    optimConstprop := fl.option_fconstprop
+    optimCSE := fl.option_fcse
+    optimRedundancy := fl.option_fredundancy
+    optimForSize := fl.option_Osize
+    debug := fl.option_g
+    propagateFloatConstants := decide (fl.option_ffloatconstprop ≥ 1)
+    generateFloatConstants := decide (fl.option_ffloatconstprop ≥ 2) }
+
+/-- The target settings of `aarch64/extractionMachdep.v` for a configuration
+    and the atom table of `C2C`. -/
+def targetOfConfig (fl : Clflags.Flags) (cfg : Configuration.Config)
+    (tbl : List (Nat × C2C.AtomInfo)) : ExtractionMachdep.Target :=
+  { abi := cfg.abi, system := cfg.system
+    atomIsExternal := C2C.atom_is_external fl tbl
+    atomNeedsGOTAccess := C2C.atom_needs_GOT_access fl tbl
+    atomIsAligned := C2C.atom_is_aligned tbl }
+
+/-- The information on `inline`/`static` functions given to `Inliningaux`. -/
+def inliningOptions (fl : Clflags.Flags) (tbl : List (Nat × C2C.AtomInfo)) :
+    Inliningaux.Options :=
+  { option_finline := fl.option_finline
+    option_finline_functions_called_once := fl.option_finline_functions_called_once
+    atomIsStatic := C2C.atom_is_static tbl
+    atomInline := C2C.atom_inline tbl }
+
+/-- The driver's view of the AArch64 target: the front-end parameters of
+    `aarch64/CBuiltins.ml` and `Machregsaux.ml`, and the back end
+    `Compiler.transf_c_program` → `Asmexpand.expand_program` →
+    `PrintAsm.print_program`, and the reference interpreter `Interp.execute`
+    (option `-interp`). -/
+def aarch64Target : Target where
+  c2c cfg :=
+    let apple := cfg.abi == "apple"
+    let macos := cfg.system == "macos"
+    { builtins := AArch64.CBuiltins.builtins apple macos
+      va_list_scalar := AArch64.CBuiltins.va_list_scalar apple
+      size_va_list := AArch64.CBuiltins.size_va_list apple
+      asm := { asm_mem_argument := AArch64.CBuiltins.asm_mem_argument
+               is_register_name := fun s => (Machregsaux.registerByName s).isSome
+               is_scratch_register := Machregsaux.isScratchRegister }
+      elf_target := cfg.elf_target }
+  backend fl cfg p tbl :=
+    let t := targetOfConfig fl cfg tbl
+    let c := compilerConfig fl (Extraction.configFor t (inliningOptions fl tbl))
+    match Compiler.transfCProgram c p with
+    | .Error e => .error e
+    | .OK tp =>
+      match asmToText t cfg.system tp with
+      | .OK s => .ok s
+      | .Error e => .error e
+  interp := some Interp.execute
 
 end Driver
 end CC

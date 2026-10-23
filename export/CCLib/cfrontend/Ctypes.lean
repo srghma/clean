@@ -21,38 +21,11 @@
   Coq's `Z.div` rounds toward −∞ while Lean's `Int./` truncates toward zero, so
   `align`/`floor`/`bytesOfBits` use `Int.fdiv` to match exactly.
 -/
+import CCLib.common.Errors
 import CCLib.common.AST
 import CCLib.lib.Maps
 
 namespace CC
-
-/-! ## Error monad (`common/Errors.v`, simplified)
-
-CompCert's `errmsg` is a list of message items carrying idents; we use a plain
-`String`, which is enough since nothing in the semantics inspects it. -/
-
-inductive Res (A : Type) where
-  | OK (a : A)
-  | Error (msg : String)
-  deriving DecidableEq, Inhabited
-
-namespace Res
-def isOK {A : Type} : Res A → Bool
-  | .OK _ => true
-  | .Error _ => false
-
-def toOption {A : Type} : Res A → Option A
-  | .OK a => some a
-  | .Error _ => none
-
-def bind {A B : Type} : Res A → (A → Res B) → Res B
-  | .OK a, f => f a
-  | .Error m, _ => .Error m
-
-instance : Monad Res where
-  pure := .OK
-  bind := bind
-end Res
 
 /-! ## Alignment arithmetic (`lib/Coqlib.v`) -/
 

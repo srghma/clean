@@ -58,4 +58,26 @@ example : danglingElseInner prog3 = true := by native_decide
 example : parsedCount bad1 = none := by native_decide
 example : parsedCount [.EOF ()] = some 0 := by native_decide
 
+/-! ### A long input
+
+`n` declarations `int x;`, read from an array.  Compiled code runs the
+offset-based interpreter of `MenhirLib/InterpreterFast.lean` (substituted for
+`parse` by `@[csimp]`), so reading a token costs `O(1)`; with the buffers of
+`Interpreter.lean`, the `k`-th token would be read through `k` closures. -/
+
+/-- The tokens of `n` declarations `int x;`, followed by `EOF`. -/
+def manyDecls (n : Nat) : Array Token := Id.run do
+  let mut a := #[]
+  for _ in [0:n] do
+    a := a.push (.INT l) |>.push (.VAR_NAME ("x", l)) |>.push (.SEMICOLON l)
+  return a.push (.EOF ())
+
+/-- Number of definitions parsed from an array of tokens. -/
+def parsedCountArr (toks : Array Token) : Option Nat :=
+  match translation_unit_file 24 (fun n => toks.getD n (.EOF ())) with
+  | .Parsed_pr defs _ => some defs.length
+  | _ => none
+
+example : parsedCountArr (manyDecls 20000) = some 20000 := by native_decide
+
 end CC.ParserCheck

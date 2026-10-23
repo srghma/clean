@@ -1,4 +1,13 @@
 /-
+  Build note (see `MODULE_AUDIT.md` and `MISSING_MODULES.md` at the repository
+  root).  Lines of the form
+    `-- missing (to port): import M` name a module that should exist (it has a
+      Rocq/OCaml counterpart) but whose source file is not in this checkout;
+    `-- blocked: import M` name a present module that depends on such a module.
+  Restore the `import` once the module is ported.  Modules that should not
+  exist in the Lean port (Flocq, extraction, per-target copies of the back end,
+  duplicates of Lean core / Mathlib) are not listed.
+
   `CCLib` — Phase 0 foundations for a CompCert-grade Clight semantics in Lean.
 
   * `CCLib.aarch64.Archi`    — target parameters (port of `<arch>/Archi.v`)
@@ -205,11 +214,6 @@
   * `CCLib.common.Worlds`   — the "worlds" part of `common/Determinism.v`: an
                        external world as a state machine answering I/O and
                        volatile accesses, `possible_event`/`possible_trace`.
-  * `CCLib.lib.IEEE754_extra{BofZ,RoundOdd,ZofB,Alg,Bparse,Conv}` — `lib/IEEE754_extra.v`
-                       itself, stated on Flocq's `binary_float` (the port of
-                       `flocq/IEEE754/Binary.v`): `BofZ`, `ZofB`, `ZofB_range`,
-                       `int_round_odd`, `Bexact_inverse`, `Bparse`, `Bconv` and all
-                       their theorems.
   * `CCLib.common.SimulationDeterm` — `common/Smallstep.v`, sections
                        `FORWARD_SIMU_EVENTUALLY(_PLUS)`, `DETERMINACY`,
                        `FORWARD_SIMU_DETERM(_DIAGRAMS)`: `forward_simulation_eventually`,
@@ -309,10 +313,6 @@
   * `CCLib.lib.Lattice` — `lib/Lattice.v`: `SEMILATTICE` class and `LBoolean`.
   * `CCLib.lib.Ordered` — `lib/Ordered.v`: the `OrderedType` class with instances for
                        positives, integers, machine integers, indexed types and pairs.
-  * `CCLib.lib.Decidableplus` — `lib/Decidableplus.v`: `Finite` types and decidability of
-                       quantifiers over them (the rest is Lean's built-in `Decidable`).
-  * `CCLib.lib.BoolEqual` — `lib/BoolEqual.v`: Boolean equalities → `DecidableEq`
-                       (the Rocq tactics correspond to `deriving DecidableEq`).
   * `CCLib.common.Subtyping` — `common/Subtyping.v`: solver for subtyping constraints
                        (`TypeAlgebra`, `SubSolver`) with `solve_sound` and `solve_complete`.
   * `CCLib.common.Memtype` — `common/Memtype.v`: abstract memory-model interface
@@ -330,22 +330,14 @@
                        `CCLib.backend.SplitLongproof` and `CCLib.backend.SplitLongproof2`
                        prove its constructors correct (all but `longofsingle` /
                        `longuofsingle`).
-  * `CCLib.lib.Wfsimpl` — `lib/Wfsimpl.v`: `Fix`/`Fixm` with their unrolling equations.
   * `CCLib.lib.Parmov` — `lib/Parmov.v`: compilation of parallel moves into sequential
                        moves, with `parmove_correctness`, `parmove2_correctness` and
                        `parmove2_correctness_with_overlap`.
   * `CCLib.backend.Kildall` — `backend/Kildall.v` + `PrimIter`: forward/backward dataflow solvers and their correctness theorems.
   * `CCLib.backend.Linearize` — `backend/Linearize.v` (+ `Linearizeaux.ml` heuristic): LTL → Linear.
   * `CCLib.backend.CleanupLabels` — `backend/CleanupLabels.v`: unused-label removal (Linear → Linear).
-  * `CCLib.lib.Zbits` — `lib/Zbits.v`: `eqmod`, `Z.testbit` decomposition, `Zzero_ext` /
-                       `Zsign_ext`, `Z_one_bits`, `Z_is_power2`, `Zsize`, `Zextract_*` /
-                       `Zinsert` and the power-of-two range lemmas (all 102 Rocq items).
-  * `CCLib.{x86_64,x86_32,riscV,arm,powerpc}.Archi` — `<arch>/Archi.v` under their Rocq names
-                       (values from `CCLib.targets.Archi`).
   * `CCLib.powerpc.Builtins1`, `CCLib.arm.Builtins1` — `powerpc/Builtins1.v` (with both
                        `builtin_sem` obligations proved) and `arm/Builtins1.v` (empty).
-  * `CCLib.x86.Conventions1`, `CCLib.riscV.Conventions1` — Rocq-named modules re-exporting
-                       `CCLib.x86.Conventions` / `CCLib.riscV.Conventions`.
   * `CCLib.arm.*`, `CCLib.powerpc.*` — the ARM and PowerPC back ends up to instruction
                        selection: `Op` (+ `OpTheory` for the lemmas of `Op.v`), `Machregs`,
                        `Locations`, `Conventions1` (all lemmas), `Conventions`, `Bounds`
@@ -376,12 +368,6 @@ import CCLib.lib.Floats
 import CCLib.lib.FloatsLemmas
 import CCLib.lib.FloatsConv
 import CCLib.lib.IEEE754_extra
-import CCLib.lib.IEEE754_extraBofZ
-import CCLib.lib.IEEE754_extraRoundOdd
-import CCLib.lib.IEEE754_extraZofB
-import CCLib.lib.IEEE754_extraAlg
-import CCLib.lib.IEEE754_extraBparse
-import CCLib.lib.IEEE754_extraConv
 import CCLib.lib.FloatsDecomp
 import CCLib.lib.FloatsSingle
 import CCLib.lib.FloatsLong
@@ -442,7 +428,7 @@ import CCLib.cfrontend.ClightBehaviors
 import CCLib.cfrontend.ClightReceptive
 import CCLib.common.Simulation
 import CCLib.common.SimulationEventually
-import CCLib.common.SimulationDeterm
+-- missing (to port): import CCLib.common.SimulationDeterm
 import CCLib.common.BackwardSimulation
 import CCLib.common.ForwardToBackward
 import CCLib.common.Bigstep
@@ -485,10 +471,10 @@ import CCLib.cfrontend.InitializersproofState
 import CCLib.cfrontend.InitializersproofMatch
 import CCLib.cfrontend.Initializersproof
 import CCLib.common.Worlds
-import CCLib.common.DeterminismSem
-import CCLib.common.SmallstepForever
-import CCLib.common.BehaviorsInfSeq
-import CCLib.common.EventsTraceinf
+-- missing (to port): import CCLib.common.DeterminismSem
+-- missing (to port): import CCLib.common.SmallstepForever
+-- missing (to port): import CCLib.common.BehaviorsInfSeq
+-- missing (to port): import CCLib.common.EventsTraceinf
 import CCLib.cfrontend.Cexec
 import CCLib.cfrontend.CexecEvents
 import CCLib.cfrontend.CexecExpr
@@ -534,7 +520,7 @@ import CCLib.driver.FrontendCorrect
 import CCLib.driver.BackendCorrect
 import CCLib.driver.CompilerCorrect
 import CCLib.driver.Complements
-import CCLib.driver.ComplementsSeparate
+-- missing (to port): import CCLib.driver.ComplementsSeparate
 import CCLib.driver.CompilerMatch
 import CCLib.common.Switch
 import CCLib.common.DetermTac
@@ -566,7 +552,6 @@ import CCLib.backend.Mach
 import CCLib.lib.UnionFind
 import CCLib.backend.Tunneling
 import CCLib.lib.Lattice
-import CCLib.lib.Wfsimpl
 import CCLib.lib.Ordered
 import CCLib.lib.Heaps
 import CCLib.lib.Iteration
@@ -575,8 +560,6 @@ import CCLib.lib.FSetAVLplus
 import CCLib.backend.SplitLong
 import CCLib.backend.SplitLongproof
 import CCLib.backend.SplitLongproof2
-import CCLib.lib.Decidableplus
-import CCLib.lib.BoolEqual
 import CCLib.lib.Parmov
 import CCLib.backend.Kildall
 import CCLib.backend.Linearize
@@ -742,22 +725,18 @@ import CCLib.x86.Op
 import CCLib.x86.OpTheory
 import CCLib.x86.OpInject
 import CCLib.x86.Machregs
-import CCLib.x86.Locations
 import CCLib.x86.Conventions
 import CCLib.x86.Asm
-import CCLib.x86.Mach
 import CCLib.x86.Asmgen
 import CCLib.x86.OpTyping
 import CCLib.x86.ValueAOp
 import CCLib.x86.NeedOp
 import CCLib.x86.CombineOp
 import CCLib.x86.CombineOpproof
-import CCLib.x86.Bounds
 import CCLib.x86.Stacklayout
 import CCLib.x86.ConstpropOp
 import CCLib.x86.ConstpropOpproof
 import CCLib.x86.ConstpropOpproof2
-import CCLib.x86.CminorSel
 import CCLib.x86.SelectOp
 import CCLib.x86.SelectLong
 import CCLib.x86.SelectOpproof
@@ -765,18 +744,6 @@ import CCLib.x86.SelectOpproof2
 import CCLib.x86.SelectOpproof3
 import CCLib.x86.SelectLongproof
 import CCLib.x86.SelectLongproof2
-import CCLib.x86.SelectDiv
-import CCLib.x86.SelectDivproof
-import CCLib.x86.SplitLong
-import CCLib.x86.SplitLongproof
-import CCLib.x86.Selection
-import CCLib.x86.SelectionproofExpr
-import CCLib.x86.SelectionproofSwitch
-import CCLib.x86.SelectionproofLessdef
-import CCLib.x86.SelectionproofExprs
-import CCLib.x86.SelectionproofIfconv
-import CCLib.x86.SelectionproofMatch
-import CCLib.x86.SelectionproofMain
 import CCLib.x86.Asmgenproof0
 import CCLib.x86.Asmgenproof1
 import CCLib.x86.Asmgenproof1Cond
@@ -786,115 +753,21 @@ import CCLib.x86.AsmgenproofBasic
 import CCLib.x86.AsmgenproofStep1
 import CCLib.x86.AsmgenproofStep2
 import CCLib.x86.Asmgenproof
-import CCLib.x86.Allocation
-import CCLib.x86.Allocproof
-import CCLib.x86.AllocproofCall
-import CCLib.x86.AllocproofEqs
-import CCLib.x86.AllocproofShape
-import CCLib.x86.AllocproofSimBasic
-import CCLib.x86.AllocproofSimCall
-import CCLib.x86.AllocproofSimFun
-import CCLib.x86.AllocproofSimOp
-import CCLib.x86.AllocproofStep
 import CCLib.x86.AsmDeterm
-import CCLib.x86.BackendCorrect
-import CCLib.x86.CSE
-import CCLib.x86.CSEdomain
-import CCLib.x86.CSEproof
-import CCLib.x86.CSEproofMem
-import CCLib.x86.CSEproofReduce
-import CCLib.x86.CSEproofStep
-import CCLib.x86.CleanupLabels
-import CCLib.x86.CleanupLabelsproof
-import CCLib.x86.Compiler
-import CCLib.x86.CompilerCorrect
-import CCLib.x86.CompilerMatch
-import CCLib.x86.Constprop
-import CCLib.x86.Constpropproof
-import CCLib.x86.ConstpropproofStep
-import CCLib.x86.Deadcode
-import CCLib.x86.Deadcodeproof
-import CCLib.x86.DeadcodeproofBuiltin
-import CCLib.x86.DeadcodeproofMain
-import CCLib.x86.DeadcodeproofMem
-import CCLib.x86.DeadcodeproofStep
-import CCLib.x86.Debugvar
-import CCLib.x86.Debugvarproof
-import CCLib.x86.Inlining
-import CCLib.x86.InliningproofBasic
-import CCLib.x86.InliningproofMain
-import CCLib.x86.InliningproofMatch
-import CCLib.x86.InliningproofStacks
-import CCLib.x86.InliningproofStep
-import CCLib.x86.Inliningspec
-import CCLib.x86.InliningspecBasic
-import CCLib.x86.InliningspecCfg
-import CCLib.x86.InliningspecExpand
-import CCLib.x86.LTL
-import CCLib.x86.Linear
-import CCLib.x86.Linearize
-import CCLib.x86.Linearizeproof
-import CCLib.x86.Lineartyping
-import CCLib.x86.Liveness
-import CCLib.x86.RTL
-import CCLib.x86.RTLgen
-import CCLib.x86.RTLgenproofBuiltin
-import CCLib.x86.RTLgenproofEnv
-import CCLib.x86.RTLgenproofExpr
-import CCLib.x86.RTLgenproofMain
-import CCLib.x86.RTLgenproofMatch
-import CCLib.x86.RTLgenspecBasic
-import CCLib.x86.RTLgenspecDefs
-import CCLib.x86.RTLgenspecExpr
-import CCLib.x86.RTLgenspecStmt
-import CCLib.x86.RTLtyping
-import CCLib.x86.RTLtypingSound
-import CCLib.x86.RTLtypingSubject
-import CCLib.x86.Renumber
-import CCLib.x86.Renumberproof
-import CCLib.x86.Stacking
-import CCLib.x86.StackingproofAgree
-import CCLib.x86.StackingproofCallee
-import CCLib.x86.StackingproofFrame
-import CCLib.x86.StackingproofMatch
-import CCLib.x86.StackingproofStep
-import CCLib.x86.Tailcall
-import CCLib.x86.Tailcallproof
-import CCLib.x86.Tunneling
-import CCLib.x86.TunnelingBranch
-import CCLib.x86.Tunnelingproof
-import CCLib.x86.Unusedglob
-import CCLib.x86.UnusedglobproofGlobals
-import CCLib.x86.UnusedglobproofMain
-import CCLib.x86.UnusedglobproofSpec
-import CCLib.x86.UnusedglobproofStep
-import CCLib.x86.UnusedglobproofLink
-import CCLib.x86.ValueAnalysis
-import CCLib.x86.ValueAnalysisSoundBC
-import CCLib.x86.ValueAnalysisSoundBasic
-import CCLib.x86.ValueAnalysisSoundBuiltin
-import CCLib.x86.ValueAnalysisSoundExtcall
-import CCLib.x86.ValueAnalysisSoundInit
-import CCLib.x86.ValueAnalysisSoundStack
-import CCLib.x86.ValueAnalysisSoundStep
 import CCLib.riscV.Op
 import CCLib.riscV.OpTheory
 import CCLib.riscV.OpInject
 import CCLib.riscV.Machregs
-import CCLib.riscV.Locations
 import CCLib.riscV.Conventions
 import CCLib.riscV.Asm
-import CCLib.riscV.Mach
 import CCLib.riscV.Asmgen
 import CCLib.riscV.ValueAOp
 import CCLib.riscV.NeedOp
 import CCLib.riscV.CombineOp
 import CCLib.riscV.CombineOpproof
-import CCLib.riscV.Bounds
 import CCLib.riscV.Stacklayout
 import CCLib.riscV.ConstpropOp
 import CCLib.riscV.ConstpropOpproof
-import CCLib.riscV.CminorSel
 import CCLib.riscV.SelectOp
 import CCLib.riscV.SelectLong
 import CCLib.riscV.SelectOpproof
@@ -903,17 +776,6 @@ import CCLib.riscV.SelectOpproof3
 import CCLib.riscV.SelectOpproof4
 import CCLib.riscV.SelectLongproof
 import CCLib.riscV.SelectLongproof2
-import CCLib.riscV.SelectDiv
-import CCLib.riscV.SelectDivproof
-import CCLib.riscV.SplitLong
-import CCLib.riscV.Selection
-import CCLib.riscV.SelectionproofExpr
-import CCLib.riscV.SelectionproofSwitch
-import CCLib.riscV.SelectionproofLessdef
-import CCLib.riscV.SelectionproofExprs
-import CCLib.riscV.SelectionproofIfconv
-import CCLib.riscV.SelectionproofMatch
-import CCLib.riscV.SelectionproofMain
 import CCLib.riscV.Asmgenproof0
 import CCLib.riscV.Asmgenproof1
 import CCLib.riscV.Asmgenproof1Cond
@@ -924,97 +786,7 @@ import CCLib.riscV.AsmgenproofBasic
 import CCLib.riscV.AsmgenproofStep1
 import CCLib.riscV.AsmgenproofStep2
 import CCLib.riscV.Asmgenproof
-import CCLib.riscV.Allocation
-import CCLib.riscV.Allocproof
-import CCLib.riscV.AllocproofCall
-import CCLib.riscV.AllocproofEqs
-import CCLib.riscV.AllocproofShape
-import CCLib.riscV.AllocproofSimBasic
-import CCLib.riscV.AllocproofSimCall
-import CCLib.riscV.AllocproofSimFun
-import CCLib.riscV.AllocproofSimOp
-import CCLib.riscV.AllocproofStep
 import CCLib.riscV.AsmDeterm
-import CCLib.riscV.BackendCorrect
-import CCLib.riscV.CSE
-import CCLib.riscV.CSEdomain
-import CCLib.riscV.CSEproof
-import CCLib.riscV.CSEproofMem
-import CCLib.riscV.CSEproofReduce
-import CCLib.riscV.CSEproofStep
-import CCLib.riscV.CleanupLabels
-import CCLib.riscV.CleanupLabelsproof
-import CCLib.riscV.Compiler
-import CCLib.riscV.CompilerCorrect
-import CCLib.riscV.CompilerMatch
-import CCLib.riscV.Constprop
-import CCLib.riscV.Constpropproof
-import CCLib.riscV.ConstpropproofStep
-import CCLib.riscV.Deadcode
-import CCLib.riscV.Deadcodeproof
-import CCLib.riscV.DeadcodeproofBuiltin
-import CCLib.riscV.DeadcodeproofMain
-import CCLib.riscV.DeadcodeproofMem
-import CCLib.riscV.DeadcodeproofStep
-import CCLib.riscV.Debugvar
-import CCLib.riscV.Debugvarproof
-import CCLib.riscV.Inlining
-import CCLib.riscV.InliningproofBasic
-import CCLib.riscV.InliningproofMain
-import CCLib.riscV.InliningproofMatch
-import CCLib.riscV.InliningproofStacks
-import CCLib.riscV.InliningproofStep
-import CCLib.riscV.Inliningspec
-import CCLib.riscV.InliningspecBasic
-import CCLib.riscV.InliningspecCfg
-import CCLib.riscV.InliningspecExpand
-import CCLib.riscV.LTL
-import CCLib.riscV.Linear
-import CCLib.riscV.Linearize
-import CCLib.riscV.Linearizeproof
-import CCLib.riscV.Lineartyping
-import CCLib.riscV.Liveness
-import CCLib.riscV.RTL
-import CCLib.riscV.RTLgen
-import CCLib.riscV.RTLgenproofBuiltin
-import CCLib.riscV.RTLgenproofEnv
-import CCLib.riscV.RTLgenproofExpr
-import CCLib.riscV.RTLgenproofMain
-import CCLib.riscV.RTLgenproofMatch
-import CCLib.riscV.RTLgenspecBasic
-import CCLib.riscV.RTLgenspecDefs
-import CCLib.riscV.RTLgenspecExpr
-import CCLib.riscV.RTLgenspecStmt
-import CCLib.riscV.RTLtyping
-import CCLib.riscV.RTLtypingSound
-import CCLib.riscV.RTLtypingSubject
-import CCLib.riscV.Renumber
-import CCLib.riscV.Renumberproof
-import CCLib.riscV.Stacking
-import CCLib.riscV.StackingproofAgree
-import CCLib.riscV.StackingproofCallee
-import CCLib.riscV.StackingproofFrame
-import CCLib.riscV.StackingproofMatch
-import CCLib.riscV.StackingproofStep
-import CCLib.riscV.Tailcall
-import CCLib.riscV.Tailcallproof
-import CCLib.riscV.Tunneling
-import CCLib.riscV.TunnelingBranch
-import CCLib.riscV.Tunnelingproof
-import CCLib.riscV.Unusedglob
-import CCLib.riscV.UnusedglobproofGlobals
-import CCLib.riscV.UnusedglobproofMain
-import CCLib.riscV.UnusedglobproofSpec
-import CCLib.riscV.UnusedglobproofStep
-import CCLib.riscV.UnusedglobproofLink
-import CCLib.riscV.ValueAnalysis
-import CCLib.riscV.ValueAnalysisSoundBC
-import CCLib.riscV.ValueAnalysisSoundBasic
-import CCLib.riscV.ValueAnalysisSoundBuiltin
-import CCLib.riscV.ValueAnalysisSoundExtcall
-import CCLib.riscV.ValueAnalysisSoundInit
-import CCLib.riscV.ValueAnalysisSoundStack
-import CCLib.riscV.ValueAnalysisSoundStep
 import CCLib.cparser.Cabs
 import CCLib.cparser.Parser
 import CCLib.cparser.C
@@ -1036,10 +808,8 @@ import CCLib.cparser.Checks
 import CCLib.cparser.ExtendedAsm
 import CCLib.cparser.StructPassing
 import CCLib.cparser.PackedStructs
-import CCLib.cparser.pre_parser_aux
-import CCLib.cparser.pre_parser
-import CCLib.cparser.ErrorReports
 import CCLib.cparser.Lexer
+import CCLib.cparser.PreParser
 import CCLib.cparser.ElabBase
 import CCLib.cparser.ElabTypes
 import CCLib.cparser.ElabInit
@@ -1068,16 +838,12 @@ import CCLib.MenhirLib.Interpreter
 import CCLib.MenhirLib.Interpreter_correct
 import CCLib.MenhirLib.Interpreter_complete
 import CCLib.MenhirLib.Main
-import CCLib.lib.Coqlib
-import CCLib.lib.Intv
-import CCLib.lib.Axioms
 import CCLib.common.Errors
-import CCLib.common.Builtins0
-import CCLib.aarch64.Builtins1
-import CCLib.x86.Builtins1
-import CCLib.riscV.Builtins1
-import CCLib.backend.Registers
-import CCLib.driver.Compopts
+-- missing (to port): import CCLib.common.Builtins0
+-- missing (to port): import CCLib.aarch64.Builtins1
+-- missing (to port): import CCLib.x86.Builtins1
+-- missing (to port): import CCLib.riscV.Builtins1
+-- missing (to port): import CCLib.driver.Compopts
 import CCLib.cfrontend.Cminorgenproof
 import CCLib.cfrontend.Cshmgenproof
 import CCLib.cfrontend.SimplExprproof
@@ -1089,364 +855,133 @@ import CCLib.backend.Selectionproof
 import CCLib.backend.Stackingproof
 import CCLib.backend.Unusedglobproof
 import CCLib.aarch64.Asmgenproof1
-import CCLib.lib.Zbits
-import CCLib.x86_64.Archi
-import CCLib.x86_32.Archi
-import CCLib.riscV.Archi
-import CCLib.arm.Archi
-import CCLib.powerpc.Archi
-import CCLib.powerpc.Builtins1
-import CCLib.arm.Builtins1
-import CCLib.x86.Conventions1
-import CCLib.riscV.Conventions1
-import CCLib.arm.Op
-import CCLib.arm.OpTheory
-import CCLib.arm.Machregs
-import CCLib.arm.Locations
-import CCLib.arm.Conventions1
-import CCLib.arm.Conventions
-import CCLib.arm.Bounds
-import CCLib.arm.Stacklayout
-import CCLib.arm.CombineOp
-import CCLib.arm.CombineOpproof
-import CCLib.arm.NeedOp
-import CCLib.arm.ValueAOp
-import CCLib.arm.ConstpropOp
-import CCLib.arm.ConstpropOpproof
-import CCLib.arm.ConstpropOpproof2
-import CCLib.arm.CminorSel
-import CCLib.arm.SelectOp
-import CCLib.arm.SplitLong
-import CCLib.arm.SelectLong
-import CCLib.arm.SelectOpproof
-import CCLib.arm.SelectOpproof2
-import CCLib.arm.SelectOpproof3
-import CCLib.arm.SplitLongproof
-import CCLib.arm.SplitLongproof2
-import CCLib.arm.SelectLongproof
-import CCLib.arm.RTL
-import CCLib.arm.LTL
-import CCLib.arm.Linear
-import CCLib.arm.Tailcall
-import CCLib.arm.Renumber
-import CCLib.arm.Inlining
-import CCLib.arm.Unusedglob
-import CCLib.arm.Tunneling
-import CCLib.arm.TunnelingBranch
-import CCLib.arm.Linearize
-import CCLib.arm.CleanupLabels
-import CCLib.arm.Debugvar
-import CCLib.arm.Mach
-import CCLib.arm.Asm
-import CCLib.arm.Asmgen
-import CCLib.powerpc.Op
-import CCLib.powerpc.OpTheory
-import CCLib.powerpc.Machregs
-import CCLib.powerpc.Locations
-import CCLib.powerpc.Conventions1
-import CCLib.powerpc.Conventions
-import CCLib.powerpc.Bounds
-import CCLib.powerpc.Stacklayout
-import CCLib.powerpc.CombineOp
-import CCLib.powerpc.CombineOpproof
-import CCLib.powerpc.NeedOp
-import CCLib.powerpc.ValueAOp
-import CCLib.powerpc.ConstpropOp
-import CCLib.powerpc.ConstpropOpproof
-import CCLib.powerpc.ConstpropOpproof2
-import CCLib.powerpc.CminorSel
-import CCLib.powerpc.SelectOp
-import CCLib.powerpc.SplitLong
-import CCLib.powerpc.SelectLong
-import CCLib.powerpc.SelectOpproof
-import CCLib.powerpc.SelectOpproof2
-import CCLib.powerpc.SelectOpproof3
-import CCLib.powerpc.SplitLongproof
-import CCLib.powerpc.SplitLongproof2
-import CCLib.powerpc.SelectLongproof
-import CCLib.powerpc.SelectLongproof2
-import CCLib.powerpc.RTL
-import CCLib.powerpc.LTL
-import CCLib.powerpc.Linear
-import CCLib.powerpc.Tailcall
-import CCLib.powerpc.Renumber
-import CCLib.powerpc.Inlining
-import CCLib.powerpc.Unusedglob
-import CCLib.powerpc.Tunneling
-import CCLib.powerpc.TunnelingBranch
-import CCLib.powerpc.Linearize
-import CCLib.powerpc.CleanupLabels
-import CCLib.powerpc.Debugvar
-import CCLib.powerpc.Mach
-import CCLib.powerpc.Asm
-import CCLib.powerpc.Asmgen
-import CCLib.arm.CleanupLabelsproof
-import CCLib.arm.Renumberproof
-import CCLib.arm.Linearizeproof
-import CCLib.arm.Debugvarproof
-import CCLib.powerpc.CleanupLabelsproof
-import CCLib.powerpc.Renumberproof
-import CCLib.powerpc.Linearizeproof
-import CCLib.powerpc.Debugvarproof
-import CCLib.powerpc.Constprop
-import CCLib.powerpc.Constpropproof
-import CCLib.powerpc.ConstpropproofStep
-import CCLib.powerpc.CSE
-import CCLib.powerpc.CSEproof
-import CCLib.powerpc.CSEproofMem
-import CCLib.powerpc.CSEproofReduce
-import CCLib.powerpc.CSEproofStep
-import CCLib.powerpc.Deadcode
-import CCLib.powerpc.Deadcodeproof
-import CCLib.powerpc.DeadcodeproofBuiltin
-import CCLib.powerpc.DeadcodeproofMain
-import CCLib.powerpc.DeadcodeproofMem
-import CCLib.powerpc.DeadcodeproofStep
-import CCLib.arm.Asmgenproof0
-import CCLib.arm.Asmgenproof1
-import CCLib.arm.Asmgenproof1Cond
-import CCLib.arm.Asmgenproof1Op
-import CCLib.arm.Asmgenproof
-import CCLib.arm.RTLtypingSound
-import CCLib.powerpc.RTLtypingSound
-import CCLib.powerpc.Asmgenproof0
-import CCLib.powerpc.Asmgenproof1
-import CCLib.powerpc.Asmgenproof1Cond
-import CCLib.powerpc.Asmgenproof1Op
-import CCLib.powerpc.Asmgenproof
-import CCLib.arm.SelectDiv
-import CCLib.arm.SelectDivproof
-import CCLib.powerpc.SelectDiv
-import CCLib.powerpc.SelectDivproof
-import CCLib.arm.Liveness
-import CCLib.arm.RTLtyping
-import CCLib.arm.UnusedglobproofSpec
-import CCLib.powerpc.Liveness
-import CCLib.powerpc.RTLtyping
-import CCLib.powerpc.UnusedglobproofSpec
-import CCLib.arm.Tailcallproof
-import CCLib.arm.Tunnelingproof
-import CCLib.powerpc.Tailcallproof
-import CCLib.powerpc.Tunnelingproof
-import CCLib.arm.OpInject
-import CCLib.powerpc.OpInject
-import CCLib.arm.UnusedglobproofGlobals
-import CCLib.arm.UnusedglobproofStep
-import CCLib.arm.UnusedglobproofMain
-import CCLib.arm.UnusedglobproofLink
-import CCLib.powerpc.UnusedglobproofGlobals
-import CCLib.powerpc.UnusedglobproofStep
-import CCLib.powerpc.UnusedglobproofMain
-import CCLib.powerpc.UnusedglobproofLink
-import CCLib.arm.InliningspecBasic
-import CCLib.arm.InliningspecCfg
-import CCLib.arm.InliningspecExpand
-import CCLib.arm.Inliningspec
-import CCLib.arm.InliningproofBasic
-import CCLib.arm.InliningproofMatch
-import CCLib.arm.InliningproofStacks
-import CCLib.arm.InliningproofStep
-import CCLib.arm.InliningproofMain
-import CCLib.powerpc.InliningspecBasic
-import CCLib.powerpc.InliningspecCfg
-import CCLib.powerpc.InliningspecExpand
-import CCLib.powerpc.Inliningspec
-import CCLib.powerpc.InliningproofBasic
-import CCLib.powerpc.InliningproofMatch
-import CCLib.powerpc.InliningproofStacks
-import CCLib.powerpc.InliningproofStep
-import CCLib.powerpc.InliningproofMain
-import CCLib.arm.CSEdomain
-import CCLib.arm.RTLgen
-import CCLib.arm.ValueAnalysis
-import CCLib.arm.Constprop
-import CCLib.arm.Deadcode
-import CCLib.arm.CSE
-import CCLib.arm.Constpropproof
-import CCLib.arm.ConstpropproofStep
-import CCLib.arm.DeadcodeproofMem
-import CCLib.arm.DeadcodeproofBuiltin
-import CCLib.arm.DeadcodeproofStep
-import CCLib.arm.DeadcodeproofMain
-import CCLib.arm.Deadcodeproof
-import CCLib.arm.CSEproofMem
-import CCLib.arm.CSEproofReduce
-import CCLib.arm.CSEproofStep
-import CCLib.arm.CSEproof
-import CCLib.arm.RTLgenspecDefs
-import CCLib.arm.RTLgenspecBasic
-import CCLib.arm.RTLgenspecExpr
-import CCLib.arm.RTLgenspecStmt
-import CCLib.arm.RTLgenproofEnv
-import CCLib.arm.RTLgenproofMatch
-import CCLib.arm.RTLgenproofExpr
-import CCLib.arm.RTLgenproofBuiltin
-import CCLib.arm.RTLgenproofMain
-import CCLib.powerpc.RTLgenspecDefs
-import CCLib.powerpc.RTLgenspecBasic
-import CCLib.powerpc.RTLgenspecExpr
-import CCLib.powerpc.RTLgenspecStmt
-import CCLib.powerpc.RTLgenproofEnv
-import CCLib.powerpc.RTLgenproofMatch
-import CCLib.powerpc.RTLgenproofExpr
-import CCLib.powerpc.RTLgenproofBuiltin
-import CCLib.powerpc.RTLgenproofMain
-import CCLib.powerpc.CSEdomain
-import CCLib.powerpc.RTLgen
-import CCLib.powerpc.ValueAnalysis
-import CCLib.arm.ValueAnalysisSoundBasic
-import CCLib.arm.ValueAnalysisSoundBC
-import CCLib.arm.ValueAnalysisSoundBuiltin
-import CCLib.arm.ValueAnalysisSoundExtcall
-import CCLib.arm.ValueAnalysisSoundInit
-import CCLib.arm.ValueAnalysisSoundStack
-import CCLib.arm.ValueAnalysisSoundStep
-import CCLib.powerpc.ValueAnalysisSoundBasic
-import CCLib.powerpc.ValueAnalysisSoundBC
-import CCLib.powerpc.ValueAnalysisSoundBuiltin
-import CCLib.powerpc.ValueAnalysisSoundExtcall
-import CCLib.powerpc.ValueAnalysisSoundInit
-import CCLib.powerpc.ValueAnalysisSoundStack
-import CCLib.powerpc.ValueAnalysisSoundStep
-import CCLib.arm.Selection
-import CCLib.powerpc.Selection
-import CCLib.arm.Allocation
-import CCLib.powerpc.Allocation
-import CCLib.arm.Lineartyping
-import CCLib.powerpc.Lineartyping
-import CCLib.arm.Stacking
-import CCLib.arm.Compiler
-import CCLib.powerpc.Stacking
-import CCLib.powerpc.Compiler
-import CCLib.flocq.Core.Core
-import CCLib.flocq.Core.FTZ
-import CCLib.flocq.Core.RauxSqrt
-import CCLib.flocq.Calc.Operations
-import CCLib.flocq.Calc.Bracket
-import CCLib.flocq.Calc.Round
-import CCLib.flocq.Calc.Plus
-import CCLib.flocq.Calc.Div
-import CCLib.flocq.Calc.Sqrt
-import CCLib.flocq.Prop.Sterbenz
-import CCLib.flocq.Prop.Relative
-import CCLib.flocq.Prop.Plus_error
-import CCLib.flocq.Prop.Mult_error
-import CCLib.flocq.Prop.Round_odd
-import CCLib.flocq.Prop.Double_rounding
-import CCLib.flocq.Prop.Double_roundingPlus
-import CCLib.flocq.Prop.Double_roundingPlusRadixGe3
-import CCLib.flocq.Prop.Double_roundingDiv
-import CCLib.flocq.Prop.Double_roundingSqrt
-import CCLib.flocq.Prop.Div_sqrt_error
-import CCLib.flocq.Prop.Div_sqrt_errorSqrt
-import CCLib.flocq.Prop.Div_sqrt_errorReal
-import CCLib.flocq.IEEE754.SpecFloat
-import CCLib.flocq.IEEE754.BinarySingleNaN
-import CCLib.flocq.IEEE754.BinaryBasic
-import CCLib.flocq.IEEE754.Binary
-import CCLib.flocq.IEEE754.BinarySqrt
-import CCLib.flocq.IEEE754.BinaryLdexp
-import CCLib.flocq.IEEE754.Bits
-import CCLib.flocq.Version
-import CCLib.lib.IntegersMore
-import CCLib.lib.IntegersWords
-import CCLib.common.MemoryMore
-import CCLib.common.MemoryAxioms
-import CCLib.common.MemoryMemtype
-import CCLib.lib.MapsMore
-import CCLib.lib.CoqlibMore
-import CCLib.common.SmallstepMore
-import CCLib.backend.NeedDomainAgree
-import CCLib.common.MemdataMore
-import CCLib.lib.IntegersExtra
-import CCLib.lib.IntegersPrimed
-import CCLib.common.BehaviorsMore
-import CCLib.backend.LocationsMore
-import CCLib.common.EventsMore
-import CCLib.lib.UnionFindMore
-import CCLib.lib.LatticeMore
-import CCLib.lib.MapsProperties
-import CCLib.backend.RTLMore
-import CCLib.backend.CminorBigstep
-import CCLib.backend.RTLtypingComplete
-import CCLib.arm.RTLtypingComplete
-import CCLib.powerpc.RTLtypingComplete
-import CCLib.riscV.RTLtypingComplete
-import CCLib.x86.RTLtypingComplete
-import CCLib.common.GlobalenvsLoadStore
-import CCLib.cfrontend.CtypesMore
-import CCLib.common.EventsSpec
-import CCLib.arm.AsmDeterm
-import CCLib.powerpc.AsmDeterm
+-- missing (to port): import CCLib.powerpc.Builtins1
+-- missing (to port): import CCLib.arm.Builtins1
+-- missing (to port): import CCLib.arm.Op
+-- missing (to port): import CCLib.arm.OpTheory
+-- missing (to port): import CCLib.arm.Machregs
+-- missing (to port): import CCLib.arm.Conventions1
+-- missing (to port): import CCLib.arm.Stacklayout
+-- missing (to port): import CCLib.arm.CombineOp
+-- missing (to port): import CCLib.arm.CombineOpproof
+-- missing (to port): import CCLib.arm.NeedOp
+-- missing (to port): import CCLib.arm.ValueAOp
+-- missing (to port): import CCLib.arm.ConstpropOp
+-- missing (to port): import CCLib.arm.ConstpropOpproof
+-- missing (to port): import CCLib.arm.ConstpropOpproof2
+-- missing (to port): import CCLib.arm.SelectOp
+-- missing (to port): import CCLib.arm.SelectLong
+-- missing (to port): import CCLib.arm.SelectOpproof
+-- missing (to port): import CCLib.arm.SelectOpproof2
+-- missing (to port): import CCLib.arm.SelectOpproof3
+-- missing (to port): import CCLib.arm.SelectLongproof
+-- missing (to port): import CCLib.arm.Asm
+-- missing (to port): import CCLib.arm.Asmgen
+-- missing (to port): import CCLib.powerpc.Op
+-- missing (to port): import CCLib.powerpc.OpTheory
+-- missing (to port): import CCLib.powerpc.Machregs
+-- missing (to port): import CCLib.powerpc.Conventions1
+-- missing (to port): import CCLib.powerpc.Stacklayout
+-- missing (to port): import CCLib.powerpc.CombineOp
+-- missing (to port): import CCLib.powerpc.CombineOpproof
+-- missing (to port): import CCLib.powerpc.NeedOp
+-- missing (to port): import CCLib.powerpc.ValueAOp
+-- missing (to port): import CCLib.powerpc.ConstpropOp
+-- missing (to port): import CCLib.powerpc.ConstpropOpproof
+-- missing (to port): import CCLib.powerpc.ConstpropOpproof2
+-- missing (to port): import CCLib.powerpc.SelectOp
+-- missing (to port): import CCLib.powerpc.SelectLong
+-- missing (to port): import CCLib.powerpc.SelectOpproof
+-- missing (to port): import CCLib.powerpc.SelectOpproof2
+-- missing (to port): import CCLib.powerpc.SelectOpproof3
+-- missing (to port): import CCLib.powerpc.SelectLongproof
+-- missing (to port): import CCLib.powerpc.SelectLongproof2
+-- missing (to port): import CCLib.powerpc.Asm
+-- missing (to port): import CCLib.powerpc.Asmgen
+-- missing (to port): import CCLib.arm.Asmgenproof0
+-- missing (to port): import CCLib.arm.Asmgenproof1
+-- missing (to port): import CCLib.arm.Asmgenproof1Cond
+-- missing (to port): import CCLib.arm.Asmgenproof1Op
+-- missing (to port): import CCLib.arm.Asmgenproof
+-- missing (to port): import CCLib.powerpc.Asmgenproof0
+-- missing (to port): import CCLib.powerpc.Asmgenproof1
+-- missing (to port): import CCLib.powerpc.Asmgenproof1Cond
+-- missing (to port): import CCLib.powerpc.Asmgenproof1Op
+-- missing (to port): import CCLib.powerpc.Asmgenproof
+-- missing (to port): import CCLib.arm.OpInject
+-- missing (to port): import CCLib.powerpc.OpInject
+-- missing (to port): import CCLib.lib.IntegersMore
+-- missing (to port): import CCLib.lib.IntegersWords
+-- missing (to port): import CCLib.common.MemoryMore
+-- missing (to port): import CCLib.common.MemoryAxioms
+-- missing (to port): import CCLib.common.MemoryMemtype
+-- missing (to port): import CCLib.lib.MapsMore
+-- missing (to port): import CCLib.common.SmallstepMore
+-- missing (to port): import CCLib.backend.NeedDomainAgree
+-- missing (to port): import CCLib.common.MemdataMore
+-- missing (to port): import CCLib.lib.IntegersExtra
+-- missing (to port): import CCLib.lib.IntegersPrimed
+-- missing (to port): import CCLib.common.BehaviorsMore
+-- missing (to port): import CCLib.backend.LocationsMore
+-- missing (to port): import CCLib.common.EventsMore
+-- missing (to port): import CCLib.lib.UnionFindMore
+-- missing (to port): import CCLib.lib.LatticeMore
+-- missing (to port): import CCLib.lib.MapsProperties
+-- missing (to port): import CCLib.backend.RTLMore
+-- missing (to port): import CCLib.backend.CminorBigstep
+-- missing (to port): import CCLib.backend.RTLtypingComplete
+-- missing (to port): import CCLib.common.GlobalenvsLoadStore
+-- missing (to port): import CCLib.cfrontend.CtypesMore
+-- missing (to port): import CCLib.common.EventsSpec
+-- missing (to port): import CCLib.arm.AsmDeterm
+-- missing (to port): import CCLib.powerpc.AsmDeterm
 import CCLib.cfrontend.CtypesAttr
-import CCLib.common.EventsVolatile
-import CCLib.common.Builtins0Num
-import CCLib.common.GlobalenvsMatch
+-- missing (to port): import CCLib.common.EventsVolatile
+-- missing (to port): import CCLib.common.Builtins0Num
+-- missing (to port): import CCLib.common.GlobalenvsMatch
 import CCLib.lib.FloatsParsed
-import CCLib.flocq.Core.RauxExp
-import CCLib.lib.MapsRemove
+-- missing (to port): import CCLib.lib.MapsRemove
 import CCLib.common.Switchaux
 import CCLib.backend.Regalloc
-import CCLib.aarch64.extractionMachdep
-import CCLib.extraction.extraction
 import CCLib.lib.Camlcoq
-import CCLib.riscV.Regalloc
-import CCLib.riscV.extractionMachdep
-import CCLib.x86.Regalloc
-import CCLib.x86.extractionMachdep
-import CCLib.arm.extractionMachdep
-import CCLib.powerpc.extractionMachdep
 import CCLib.backend.RTLgenaux
 import CCLib.backend.Selectionaux
 import CCLib.backend.Inliningaux
-import CCLib.x86.RTLgenaux
-import CCLib.x86.Selectionaux
-import CCLib.x86.Inliningaux
-import CCLib.riscV.RTLgenaux
-import CCLib.riscV.Selectionaux
-import CCLib.riscV.Inliningaux
 import CCLib.common.Sections
 import CCLib.backend.Asmexpandaux
 import CCLib.backend.PrintAsmaux
 import CCLib.backend.PrintAsm
 import CCLib.x86.Asmexpand
 import CCLib.x86.TargetPrinter
-import CCLib.x86.Driver
 import CCLib.aarch64.Asmexpand
 import CCLib.aarch64.TargetPrinter
-import CCLib.arm.Constantexpand
-import CCLib.arm.Asmexpand
-import CCLib.arm.TargetPrinter
-import CCLib.arm.AsmToJSON
-import CCLib.powerpc.Asmexpand
-import CCLib.powerpc.TargetPrinter
-import CCLib.powerpc.AsmToJSON
+-- blocked: import CCLib.arm.Constantexpand
+-- blocked: import CCLib.arm.Asmexpand
+-- blocked: import CCLib.arm.TargetPrinter
+-- blocked: import CCLib.arm.AsmToJSON
+-- blocked: import CCLib.powerpc.Asmexpand
+-- blocked: import CCLib.powerpc.TargetPrinter
+-- blocked: import CCLib.powerpc.AsmToJSON
 import CCLib.backend.Machregsnames
 import CCLib.backend.Linearizeaux
 import CCLib.backend.AisAnnot
+import CCLib.extraction.extraction
 import CCLib.driver.Driver
 import CCLib.riscV.Asmexpand
 import CCLib.riscV.TargetPrinter
-import CCLib.riscV.Driver
 import CCLib.common.PrintAST
 import CCLib.lib.Format
 import CCLib.aarch64.PrintOp
 import CCLib.x86.PrintOp
 import CCLib.riscV.PrintOp
 import CCLib.aarch64.Machregsaux
-import CCLib.arm.Machregsaux
-import CCLib.powerpc.Machregsaux
+-- blocked: import CCLib.arm.Machregsaux
+-- blocked: import CCLib.powerpc.Machregsaux
 import CCLib.riscV.Machregsaux
 import CCLib.x86.Machregsaux
 import CCLib.backend.PrintRTL
 import CCLib.backend.PrintLTL
 import CCLib.backend.PrintMach
-import CCLib.x86.PrintRTL
-import CCLib.x86.PrintLTL
-import CCLib.x86.PrintMach
-import CCLib.riscV.PrintRTL
-import CCLib.riscV.PrintLTL
-import CCLib.riscV.PrintMach
 import CCLib.backend.PrintCminor
 import CCLib.cfrontend.PrintCsyntax
 import CCLib.cfrontend.PrintClight
@@ -1456,17 +991,11 @@ import CCLib.riscV.AsmToJSON
 import CCLib.backend.XTL
 import CCLib.backend.IRC
 import CCLib.backend.Splitting
-import CCLib.x86.XTL
-import CCLib.x86.IRC
-import CCLib.x86.Splitting
-import CCLib.riscV.XTL
-import CCLib.riscV.IRC
-import CCLib.riscV.Splitting
 import CCLib.backend.PrintXTL
 import CCLib.lib.Commandline
 import CCLib.lib.Responsefile
 import CCLib.lib.Readconfig
-import CCLib.lib.Printlines
+-- missing (to port): import CCLib.lib.Printlines
 import CCLib.driver.Configuration
 import CCLib.driver.Driveraux
 import CCLib.driver.Timing
@@ -1482,29 +1011,11 @@ import CCLib.debug.DwarfPrinter
 import CCLib.debug.DebugInformation
 import CCLib.debug.Dwarfgen
 import CCLib.lib.OCamlHashtbl
-import CCLib.driver.InterpPrintf
+-- missing (to port): import CCLib.driver.InterpPrintf
 import CCLib.driver.Interp
-import CCLib.backend.Json
-import CCLib.backend.Fileinfo
-import CCLib.cparser.deLexer
-import CCLib.backend.JsonAST
-import CCLib.arm.PrintOp
-import CCLib.powerpc.PrintOp
-import CCLib.arm.PrintRTL
-import CCLib.arm.PrintLTL
-import CCLib.arm.PrintMach
-import CCLib.powerpc.PrintRTL
-import CCLib.powerpc.PrintLTL
-import CCLib.powerpc.PrintMach
-import CCLib.arm.Selectionaux
-import CCLib.arm.RTLgenaux
-import CCLib.arm.Inliningaux
-import CCLib.powerpc.Selectionaux
-import CCLib.powerpc.RTLgenaux
-import CCLib.powerpc.Inliningaux
-import CCLib.arm.XTL
-import CCLib.arm.Splitting
-import CCLib.arm.IRC
-import CCLib.powerpc.XTL
-import CCLib.powerpc.Splitting
-import CCLib.powerpc.IRC
+-- missing (to port): import CCLib.backend.Json
+-- missing (to port): import CCLib.backend.Fileinfo
+-- missing (to port): import CCLib.cparser.deLexer
+-- missing (to port): import CCLib.backend.JsonAST
+-- missing (to port): import CCLib.arm.PrintOp
+-- missing (to port): import CCLib.powerpc.PrintOp

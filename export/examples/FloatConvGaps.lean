@@ -10,7 +10,7 @@
   behaviour, kept for reference.
 
   Not part of the default `Examples` roots.  Run with
-      cd export && lake env lean examples/FloatConvGaps.lean
+      lake env lean export/examples/FloatConvGaps.lean   (from the repository root)
 -/
 import CCLib
 

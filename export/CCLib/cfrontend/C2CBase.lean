@@ -32,7 +32,6 @@ import CCLib.cparser.Env
 import CCLib.cparser.ExtendedAsm
 import CCLib.cfrontend.Ctyping
 import CCLib.cfrontend.Initializers
-import CCLib.cfrontend.CtypesAttr
 import CCLib.common.Sections
 import CCLib.common.MemoryInject
 import CCLib.lib.FloatsParsed
@@ -662,20 +661,21 @@ def checkFloatOverflow (cls : Nat) (typ : String) : CM Unit := do
   | 2 => warning .Literal_range s!"magnitude of floating-point constant too large for type '{typ}'"
   | _ => warning .Literal_range "floating-point converts converts to 'NaN'"
 
-/-- Classification of a binary float: 0 finite, 1 zero, 2 infinity, 3 NaN -/
+/-- Classification of a binary float: 0 finite, 1 zero, 2 infinity, 3 NaN
+    (OCaml: the constructor of Flocq's `binary_float`; here read off the
+    exact IEEE-754 model's `unpack`). -/
+def classifyBits (spec : FloatModel.Format) (b : BitVec spec.numBits) : Nat :=
+  match FloatModel.UnpackedFloat.unpack spec b with
+  | .finite .. => 0
+  | .zero _ => 1
+  | .infinity _ => 2
+  | .notANumber => 3
+
 def classifyB64 (f : Floats.Float) : Nat :=
-  match Floats.Float.toB64 f with
-  | .B754_finite .. => 0
-  | .B754_zero _ => 1
-  | .B754_infinity _ => 2
-  | .B754_nan .. => 3
+  classifyBits FloatModel.Format.binary64 f.bits
 
 def classifyB32 (f : Floats.Float32) : Nat :=
-  match Floats.Float32.toB32 f with
-  | .B754_finite .. => 0
-  | .B754_zero _ => 1
-  | .B754_infinity _ => 2
-  | .B754_nan .. => 3
+  classifyBits FloatModel.Format.binary32 f.bits
 
 def convertFloat (f : CParser.C.FloatCst) (kind : CParser.C.FKind) : CM Expr := do
   let mant ← z_of_str f.hex (f.intPart ++ f.fracPart) 0

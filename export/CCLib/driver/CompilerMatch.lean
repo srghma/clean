@@ -267,7 +267,7 @@ def cPasses : Passes (Language.gen Csyntax.Program) (Language.gen Asm.Program) :
 def CMatchProg : Csyntax.Program → Asm.Program → Prop :=
   (composePasses (cPasses c)).pass_match
 
-theorem simplExpr_wf {fu : Ident} {p : Csyntax.Program} {tp : Clight.Program}
+theorem simplExpr_wf {fu : Ident} {p : Csyntax.Program} {tp : CC.Program}
     (h : SimplExpr.translProgram fu p = .OK tp) :
     buildCompositeEnv tp.prog_types = .OK tp.prog_comp_env := by
   unfold SimplExpr.translProgram at h
@@ -276,7 +276,7 @@ theorem simplExpr_wf {fu : Ident} {p : Csyntax.Program} {tp : Clight.Program}
   · cases h; exact p.prog_comp_env_eq
 
 theorem simplLocals_wf {opts : SimplLocals.Options} {p : CtypesLinking.WFProgram}
-    {tp : Clight.Program} (h : SimplLocals.transfProgram opts p.val = .OK tp) :
+    {tp : CC.Program} (h : SimplLocals.transfProgram opts p.val = .OK tp) :
     buildCompositeEnv tp.prog_types = .OK tp.prog_comp_env := by
   unfold SimplLocals.transfProgram at h
   split at h

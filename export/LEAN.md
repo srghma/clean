@@ -14,16 +14,16 @@ what exists, what it guarantees, and how to use it. The work has four parts:
    used to prove real C functions correct and memory-safe.
 
 The development (the `CCLib` root) has no external dependencies (no Mathlib)
-and contains no `sorry` and no `native_decide`. (The repository-root
-`lakefile.toml` also builds it, with `export/` as source directory, on the same
-toolchain `leanprover/lean4:v4.32.1`. The root project additionally requires
-Mathlib for the second root `CCLibReal`, which restates the Flocq results
-that involve irrational reals over Mathlib's `ℝ` (including the rounding,
-`ulp` and relative-error theory, rounding to odd and the double-rounding
-theorems for square roots, for arbitrary real arguments), and which
-contains the proofs that the port's duplicates of Mathlib/Batteries/core
-definitions agree with them (see `../MATHLIB_DUPLICATION.md`); `CCLib` itself
-does not import Mathlib.)
+and contains no `sorry` and no `native_decide`. (It is built by the repository-root
+`lakefile.toml`, with `export/` as source directory, on the toolchain
+`leanprover/lean4:v4.32.1` pinned in the root `lean-toolchain`. The root project additionally requires
+Mathlib for the second root `CCLibMathlib`, which contains the proofs that
+the port's duplicates of Mathlib/Batteries/core definitions agree with them
+(see `../MATHLIB_DUPLICATION.md`); `CCLib` itself does not import Mathlib.
+The floating-point semantics is computed by the exact IEEE-754 model
+`CCLib/lib/FloatModel.lean` (a backport of Lean core's `Float.Model`), so the
+port contains no Flocq; see `../MODULE_AUDIT.md` for which modules the port
+should and should not contain.)
 
 ---
 
@@ -425,11 +425,12 @@ make -j proof && make extraction && make clightgen
 make ccomp                                  # oracle for diff_exec.sh
 ```
 
-**Build the Lean side** (Lean 4.32.1, pinned in `export/lean-toolchain`).
-Run `lake` from `export/`, not from the repository root:
+**Build the Lean side** (Lean 4.32.1, pinned in the repository-root
+`lean-toolchain`). The only Lake project is the one at the repository root
+(`lakefile.toml`, with `export/` as source directory); run `lake` from there:
 
 ```
-cd export && lake build
+lake build
 ```
 
 **Run the validation suites** (with the opam switch active):
